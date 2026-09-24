@@ -2,24 +2,18 @@ kind: Namespace
 apiVersion: v1
 metadata:
   name: openbao
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: openbao-eso-auth
   namespace: openbao
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
 ---
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
   name: openbao
   namespace: openbao
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
 spec:
   to:
     kind: Service
