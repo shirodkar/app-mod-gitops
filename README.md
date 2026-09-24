@@ -16,18 +16,22 @@ oc apply -f gitops/install-gitops.yaml
 oc get pods -n openshift-gitops --watch
 ```
 
-### 2. Deploy OpenBao Vault
+### 2. Deploy Infrastructure (Helm)
 
-OpenBao must be deployed before infrastructure because MTA requires secrets from OpenBao.
+Deploys everything in a single ArgoCD Application: OpenBao, operators, RBAC, Dev Spaces, MTA, and the ClusterSecretStore.
 
 ```bash
-oc apply -f gitops/infra/application-openbao.yaml
-oc get pods -n openbao --watch
+oc apply -f gitops/infra/application-infra.yaml
+oc patch console.operator.openshift.io cluster --type=json -p '[{"op":"add","path":"/spec/plugins/-","value":"gitops-plugin"}]'
+oc get applications -n openshift-gitops -w
 ```
 
-Initialize and unseal:
+### 3. Initialize OpenBao Vault
+
+Wait for the OpenBao pod to be ready, then initialize and unseal:
 
 ```bash
+oc get pods -n openbao --watch
 oc exec -n openbao openbao-0 -- sh -c 'bao operator init -key-shares=1 -key-threshold=1'
 oc exec -n openbao openbao-0 -- sh -c 'bao operator unseal <unseal_key>'
 ```
@@ -44,16 +48,6 @@ Access the OpenBao UI:
 
 ```bash
 oc get route -n openbao
-```
-
-### 3. Deploy Infrastructure (Helm)
-
-Includes operators, RBAC, Dev Spaces, MTA, and the ClusterSecretStore that connects to OpenBao.
-
-```bash
-oc apply -f gitops/infra/application-infra.yaml
-oc patch console.operator.openshift.io cluster --type=json -p '[{"op":"add","path":"/spec/plugins/-","value":"gitops-plugin"}]'
-oc get applications -n openshift-gitops -w
 ```
 
 ### 4. Add the Mammoth Application to MTA
@@ -129,16 +123,15 @@ curl -sk -X PUT "$HUB/archetypes/$ARCH_ID" \
   }"
 ```
 
-Dev Spaces is also included in the infrastructure Helm chart (step 2) and deploys automatically.
+Dev Spaces and MTA are also included in the infrastructure Helm chart and deploy automatically.
 
 ## Repository Structure
 
-| Directory                           | Strategy    | Purpose                                                   |
-| ----------------------------------- | ----------- | --------------------------------------------------------- |
-| `gitops/install-gitops.yaml`        | Plain       | Bootstrap GitOps operator + RBAC                          |
-| `gitops/infra/`                     | ArgoCD Apps | Infrastructure application definitions                    |
-| `gitops/applications/`              | ArgoCD Apps | App-of-apps for each EAP workload                         |
-| `manifests/helm/infra/`             | Helm        | Namespaces, RBAC, operators, AppProjects, Dev Spaces, MTA |
-| `manifests/kustomize/applications/` | Kustomize   | EAP app workloads (base + per-app overlays)               |
-| `manifests/plain/`                  | Plain YAML  | OpenBao supplementary resources                           |
-| `eap/applications/`                 | —           | EAP server CLI scripts and module configs                 |
+| Directory                           | Strategy    | Purpose                                                            |
+| ----------------------------------- | ----------- | ------------------------------------------------------------------ |
+| `gitops/install-gitops.yaml`        | Plain       | Bootstrap GitOps operator + RBAC                                   |
+| `gitops/infra/`                     | ArgoCD Apps | Infrastructure application definition                              |
+| `gitops/applications/`              | ArgoCD Apps | App-of-apps for each EAP workload                                  |
+| `manifests/helm/infra/`             | Helm        | All infra: OpenBao, operators, RBAC, AppProjects, Dev Spaces, MTA  |
+| `manifests/kustomize/applications/` | Kustomize   | EAP app workloads (base + per-app overlays)                        |
+| `eap/applications/`                 | —           | EAP server CLI scripts and module configs                          |

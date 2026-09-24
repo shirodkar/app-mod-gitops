@@ -4,7 +4,7 @@ metadata:
   name: infra
   namespace: openshift-gitops
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   destination:
     server: 'https://kubernetes.default.svc'
@@ -28,6 +28,7 @@ spec:
     syncOptions:
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true
+      - CreateNamespace=true
   ignoreDifferences:
     - kind: ServiceAccount
       jsonPointers:
