@@ -18,7 +18,7 @@ oc get pods -n openshift-gitops --watch
 
 ### 2. Deploy Infrastructure (Helm)
 
-Deploys everything in a single ArgoCD Application: OpenBao, operators, RBAC, Dev Spaces, MTA, and the ClusterSecretStore.
+Deploys everything via a multi-source ArgoCD Application: OpenBao (from its Helm repo), plus operators, RBAC, Dev Spaces, MTA, and the ClusterSecretStore (from the Git-based infra chart).
 
 ```bash
 oc apply -f gitops/infra/application-infra.yaml
@@ -132,6 +132,6 @@ Dev Spaces and MTA are also included in the infrastructure Helm chart and deploy
 | `gitops/install-gitops.yaml`        | Plain       | Bootstrap GitOps operator + RBAC                                   |
 | `gitops/infra/`                     | ArgoCD Apps | Infrastructure application definition                              |
 | `gitops/applications/`              | ArgoCD Apps | App-of-apps for each EAP workload                                  |
-| `manifests/helm/infra/`             | Helm        | All infra: OpenBao, operators, RBAC, AppProjects, Dev Spaces, MTA  |
+| `manifests/helm/infra/`             | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA               |
 | `manifests/kustomize/applications/` | Kustomize   | EAP app workloads (base + per-app overlays)                        |
 | `eap/applications/`                 | —           | EAP server CLI scripts and module configs                          |
