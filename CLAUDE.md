@@ -189,6 +189,8 @@ Applications use automated sync with:
 - `prune: true` - Remove resources not in Git
 - `selfHeal: true` - Revert manual changes
 - `SkipDryRunOnMissingResource=true` - Skip validation for CRDs not yet installed
+- `ServerSideApply=true` - Allows applying CRs whose CRDs are being installed in the same sync
+- `retry` with exponential backoff - Operators in wave 3 need time to install CRDs before wave 4 CRs (Tackle, CheCluster, HyperConverged) can be applied; retries handle this race
 
 ## Important Files
 
