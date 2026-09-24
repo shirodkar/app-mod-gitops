@@ -1,0 +1,103 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: custom-eap-builder-image
+spec:
+  output:
+    to:
+      kind: DockerImage
+      name: 'quay.io/path/to/custom-eap-builder-image:latest'
+    pushSecret:
+      name: quay-secret
+  successfulBuildsHistoryLimit: 1
+  failedBuildsHistoryLimit: 1
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: DockerImage
+        name: 'registry.redhat.io/path/to/eap-builder-image:latest'
+      pullSecret:
+        name: rh-pull-secret
+  source:
+    type: Dockerfile
+    dockerfile: |-
+      FROM registry.redhat.io/path/to/eap-builder-image:latest
+      USER root
+      RUN microdnf install -y git && microdnf clean all
+      USER 185
+  triggers:
+    - type: ConfigChange
+  runPolicy: Serial
+---
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: eap-build-artifacts
+spec:
+  output:
+    to:
+      kind: DockerImage
+      name: 'quay.io/path/to/eap-build-artifacts:latest'
+    pushSecret:
+      name: quay-secret
+  successfulBuildsHistoryLimit: 1
+  failedBuildsHistoryLimit: 1
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: DockerImage
+        name: 'quay.io/path/to/custom-eap-builder-image:latest'
+      pullSecret:
+        name: quay-secret
+      env:
+        - name: CUSTOM_INSTALL_DIRECTORIES
+          value: extensions
+      incremental: true
+      forcePull: true
+  source:
+    type: Git
+    git:
+      uri: 'git/url/to/source/repository.git'
+  triggers:
+    - type: ConfigChange
+  runPolicy: Serial
+---
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: eap
+spec:
+  output:
+    to:
+      kind: DockerImage
+      name: 'quay.io/path/to/eap:latest'
+    pushSecret:
+      name: quay-secret
+  successfulBuildsHistoryLimit: 1
+  failedBuildsHistoryLimit: 1
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: DockerImage
+        name: 'registry.redhat.io/path/to/eap-runtime-image:latest'
+      pullSecret:
+        name: rh-pull-secret
+  source:
+    type: Dockerfile
+    dockerfile: |-
+      FROM registry.redhat.io/path/to/eap-runtime-image:latest
+      COPY --chown=jboss:root /server $JBOSS_HOME
+      RUN chmod -R ug+rwX $JBOSS_HOME
+    images:
+      - from:
+          kind: DockerImage
+          name: 'quay.io/path/to/eap-build-artifacts:latest'
+        paths:
+          - sourcePath: /opt/server
+            destinationDir: .
+        pullSecret:
+          name: quay-secret
+  runPolicy: Serial

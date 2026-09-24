@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openbao
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  destination:
+    namespace: openbao
+    server: 'https://kubernetes.default.svc'
+  project: default
+  sources:
+    - chart: openbao
+      repoURL: 'https://openbao.github.io/openbao-helm'
+      targetRevision: 0.28.3
+      helm:
+        values: |
+          global:
+            openshift: true
+          injector:
+            enabled: false
+          server:
+            standalone:
+              enabled: true
+              config: |
+                ui = true
+                listener "tcp" {
+                  tls_disable = 1
+                  address = "[::]:8200"
+                  cluster_address = "[::]:8201"
+                }
+                storage "file" {
+                  path = "/openbao/data"
+                }
+            authDelegator:
+              enabled: true
+            dataStorage:
+              enabled: true
+              size: 1Gi
+          ui:
+            enabled: true
+    - repoURL: 'https://github.com/shirodkar/my-gitops.git'
+      targetRevision: HEAD
+      path: manifests/plain/openbao
+      directory:
+        recurse: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,5 @@
+kind: Kustomization
+resources:
+  - external-secrets.yaml
+  - service-accounts.yaml
+  - wildfly-servers.yaml

@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: shared-app-project
+  namespace: shared-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  clusterResourceBlacklist:
+    - group: '*'
+      kind: '*'
+  description: Shared App Project
+  destinations:
+    {{- toYaml .Values.appProjects.sharedAppProject.destinations | nindent 4 }}
+  namespaceResourceBlacklist:
+    {{- toYaml .Values.appProjects.sharedAppProject.namespaceResourceBlacklist | nindent 4 }}
+  sourceRepos:
+    {{- toYaml .Values.appProjects.sharedAppProject.sourceRepos | nindent 4 }}
+  roles:
+    - description: Developer
+      groups:
+      {{- toYaml .Values.appProjects.sharedAppProject.roles.developerGroups | nindent 6 }}
+      name: devops-admin
+      policies:
+      - p, proj:shared-app-project:devops-admin, applications, *, shared-app-project/*, allow
+      - p, proj:shared-app-project:devops-admin, exec, create, shared-app-project/*, allow

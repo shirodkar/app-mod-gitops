@@ -1,0 +1,48 @@
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  name: external-secrets-operator-og
+  namespace: external-secrets-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  name: openshift-logging-og
+  namespace: openshift-logging
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  name: openshift-cnv-og
+  namespace: openshift-cnv
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  targetNamespaces:
+    - openshift-cnv
+---
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  name: openshift-devspaces-og
+  namespace: openshift-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec: {}
+---
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  name: openshift-mta-og
+  namespace: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  targetNamespaces:
+    - openshift-mta

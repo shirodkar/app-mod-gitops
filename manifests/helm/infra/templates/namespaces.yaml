@@ -1,0 +1,44 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: external-secrets-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: openshift-logging
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: openshift-cnv
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: openshift-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+{{- range .Values.namespaces }}
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: {{ . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+{{- end }}

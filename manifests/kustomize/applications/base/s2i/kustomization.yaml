@@ -1,0 +1,4 @@
+kind: Kustomization
+resources:
+  - build-configs.yaml
+  - external-secrets.yaml

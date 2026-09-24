@@ -1,0 +1,21 @@
+appProjects:
+  sharedAppProject:
+    destinations:
+      - namespace: '*'
+        server: '*'
+    namespaceResourceBlacklist:
+      - group: ''
+        kind: ResourceQuota
+      - group: ''
+        kind: LimitRange
+      - group: operators.coreos.com
+        kind: '*'
+      - group: operator.openshift.io
+        kind: '*'
+      - group: storage.k8s.io
+        kind: '*'
+    sourceRepos:
+      - '*'
+    roles:
+      developerGroups:
+        - developers

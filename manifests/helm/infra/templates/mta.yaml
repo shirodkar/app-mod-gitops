@@ -1,0 +1,81 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: kai-api-keys
+  namespace: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  API_KEY: c2stSnc2TVBVVENDeE5zT2tvbkUwMzdVZw==
+  GOOGLE_API_KEY: c2stTEVWZEpLSTNOUnh2Z3NadkR1YThMZw==
+  OPENAI_API_KEY: c2stSnc2TVBVVENDeE5zT2tvbkUwMzdVZw==
+type: Opaque
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: kai-api-keys
+  namespace: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: secrets/ai
+        metadataPolicy: None
+        property: API_KEY
+      secretKey: API_KEY
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: secrets/ai
+        metadataPolicy: None
+        property: API_KEY
+      secretKey: OPENAI_API_KEY
+  refreshInterval: 5m
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: vault-secret-store
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: kai-api-keys
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mta-allow-devspaces
+  namespace: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: mta-ui
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: che.eclipse.org
+      ports:
+        - protocol: TCP
+          port: 8080
+  policyTypes:
+    - Ingress
+---
+apiVersion: tackle.konveyor.io/v1alpha1
+kind: Tackle
+metadata:
+  name: tackle
+  namespace: openshift-mta
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  feature_auth_required: 'false'
+  kai_llm_baseurl: 'https://maas-rhdp.apps.maas.redhatworkshops.io/v1'
+  kai_llm_model: deepseek-r1-distill-qwen-14b
+  kai_llm_provider: openai
+  kai_llm_proxy_enabled: true
+  kai_solution_server_enabled: true

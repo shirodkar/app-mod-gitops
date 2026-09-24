@@ -1,0 +1,19 @@
+apiVersion: wildfly.org/v1alpha1
+kind: WildFlyServer
+metadata:
+  name: wfs
+spec:
+  applicationImage: 'quay.io/path/to/eap:latest'
+  replicas: 1
+  serviceAccountName: eap-service-account
+  env:
+    - name: SUBSYSTEM_LOGGING_ROOT_LOGGER_ROOT__LEVEL
+      value: INFO
+    - name: APP_LOG_DIR
+      value: /opt/eap/standalone/data/logs
+  storage:
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 1Gi

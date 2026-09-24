@@ -1,0 +1,35 @@
+apiVersion: org.eclipse.che/v2
+kind: CheCluster
+metadata:
+  name: devspaces
+  namespace: openshift-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  components:
+    cheServer:
+      debug: false
+      logLevel: INFO
+    pluginRegistry:
+      openVSXURL: ''
+    dashboard: {}
+    devWorkspace: {}
+    imagePuller:
+      enable: false
+  containerRegistry: {}
+  devEnvironments:
+    startTimeoutSeconds: 600
+    defaultEditor: che-incubator/che-code/latest
+    defaultComponents:
+      - name: dev
+        container:
+          image: registry.redhat.io/devspaces/udi-rhel8:latest
+          sourceMapping: /projects
+          env:
+            - name: MAVEN_OPTS
+              value: '-Dmaven.repo.local=/projects/.m2/repository'
+    maxNumberOfRunningWorkspacesPerUser: -1
+    storage:
+      pvcStrategy: per-workspace
+  gitServices: {}
+  networking: {}
