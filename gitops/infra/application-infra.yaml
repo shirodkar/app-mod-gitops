@@ -10,7 +10,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   project: default
   source:
-    repoURL: 'https://github.com/shirodkar/my-gitops.git'
+    repoURL: 'https://github.com/shirodkar/app-mod-gitops.git'
     targetRevision: HEAD
     path: manifests/helm/infra
     helm: {}
