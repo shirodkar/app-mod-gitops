@@ -36,13 +36,14 @@ app-mod-gitops/
 │   │           ├── hyperconverged.yaml
 │   │           ├── checlusters.yaml
 │   │           ├── mta.yaml
+│   │           ├── external-secrets-stores.yaml
 │   │           └── console-plugins.yaml
 │   ├── kustomize/                       # Kustomize overlays
 │   │   └── applications/
 │   │       ├── base/                    # Shared base (deploy + s2i)
 │   │       └── <app-name>/              # Per-app overlay (deploy + s2i)
 │   └── plain/                           # Plain YAML manifests
-│       └── openbao/                     # OpenBao Route/Service resources
+│       └── openbao/                     # OpenBao namespace, ServiceAccount, Route
 └── eap/                                 # EAP server configuration
     └── applications/
         └── mammoth-ear/                 # CLI scripts
@@ -54,11 +55,14 @@ app-mod-gitops/
 
 Infrastructure resources are deployed in a specific order using ArgoCD sync waves:
 
-- **Wave 0**: RBAC (Groups, RoleBindings, ClusterRoleBindings) + Core namespaces + ArgoCD instances
-- **Wave 1**: OpenBao vault (multi-source application)
+OpenBao (wave 0) must be deployed before infra (wave 1) because the infra chart's `ClusterSecretStore` and MTA `ExternalSecret` depend on a running OpenBao instance.
+
+- **Wave 0**: OpenBao vault (separate multi-source Application — must sync first)
+- **Wave 0** (infra): RBAC (Groups, RoleBindings, ClusterRoleBindings) + Core namespaces + ArgoCD instances
 - **Wave 2**: Application Projects (AppProjects)
-- **Wave 3**: Operators (OperatorGroups, Subscriptions, ExternalSecretsConfig)
-- **Wave 4**: Operator-managed resources (HyperConverged, CheCluster, Tackle)
+- **Wave 3**: Operators (OperatorGroups, Subscriptions, ExternalSecretsConfig) + MTA secrets + NetworkPolicies
+- **Wave 4**: ClusterSecretStore (connects ESO to OpenBao) + HyperConverged + CheCluster
+- **Wave 5**: ExternalSecrets + Tackle (depend on ClusterSecretStore and operator CRDs)
 
 **Important**: Always add `argocd.argoproj.io/sync-wave` annotations to new resources to ensure proper deployment order.
 
@@ -190,7 +194,7 @@ Applications use automated sync with:
 - `selfHeal: true` - Revert manual changes
 - `SkipDryRunOnMissingResource=true` - Skip validation for CRDs not yet installed
 - `ServerSideApply=true` - Allows applying CRs whose CRDs are being installed in the same sync
-- `retry` with exponential backoff - Operators in wave 3 need time to install CRDs before wave 4 CRs (Tackle, CheCluster, HyperConverged) can be applied; retries handle this race
+- `retry` with exponential backoff - Operators in wave 3 need time to install CRDs before later wave CRs (ClusterSecretStore, Tackle, CheCluster, HyperConverged) can be applied; retries handle this race
 
 ## Important Files
 

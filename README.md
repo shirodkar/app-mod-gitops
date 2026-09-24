@@ -16,15 +16,9 @@ oc apply -f gitops/install-gitops.yaml
 oc get pods -n openshift-gitops --watch
 ```
 
-### 2. Deploy Infrastructure (Helm)
+### 2. Deploy OpenBao Vault
 
-```bash
-oc apply -f gitops/infra/application-infra.yaml
-oc patch console.operator.openshift.io cluster --type=json -p '[{"op":"add","path":"/spec/plugins/-","value":"gitops-plugin"}]'
-oc get applications -n openshift-gitops -w
-```
-
-### 3. Deploy OpenBao Vault
+OpenBao must be deployed before infrastructure because MTA requires secrets from OpenBao.
 
 ```bash
 oc apply -f gitops/infra/application-openbao.yaml
@@ -52,7 +46,15 @@ Access the OpenBao UI:
 oc get route -n openbao
 ```
 
-MTA is included in the infrastructure Helm chart (step 2) and deploys automatically.
+### 3. Deploy Infrastructure (Helm)
+
+Includes operators, RBAC, Dev Spaces, MTA, and the ClusterSecretStore that connects to OpenBao.
+
+```bash
+oc apply -f gitops/infra/application-infra.yaml
+oc patch console.operator.openshift.io cluster --type=json -p '[{"op":"add","path":"/spec/plugins/-","value":"gitops-plugin"}]'
+oc get applications -n openshift-gitops -w
+```
 
 ### 4. Add the Mammoth Application to MTA
 
