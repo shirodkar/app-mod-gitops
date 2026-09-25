@@ -32,6 +32,8 @@ spec:
                 storage "file" {
                   path = "/openbao/data"
                 }
+            readinessProbe:
+              path: "/v1/sys/health?standbyok=1&sealedcode=200&uninitcode=200"
             authDelegator:
               enabled: true
             dataStorage:
