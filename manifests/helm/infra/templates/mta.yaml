@@ -1,16 +1,3 @@
-kind: Secret
-apiVersion: v1
-metadata:
-  name: kai-api-keys
-  namespace: openshift-mta
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-data:
-  API_KEY: c2stSnc2TVBVVENDeE5zT2tvbkUwMzdVZw==
-  GOOGLE_API_KEY: c2stTEVWZEpLSTNOUnh2Z3NadkR1YThMZw==
-  OPENAI_API_KEY: c2stSnc2TVBVVENDeE5zT2tvbkUwMzdVZw==
-type: Opaque
----
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
