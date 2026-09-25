@@ -12,6 +12,7 @@ spec:
         decodingStrategy: None
         key: secrets/ai
         metadataPolicy: None
+        nullBytePolicy: Ignore
         property: API_KEY
       secretKey: API_KEY
     - remoteRef:
@@ -19,6 +20,7 @@ spec:
         decodingStrategy: None
         key: secrets/ai
         metadataPolicy: None
+        nullBytePolicy: Ignore
         property: API_KEY
       secretKey: OPENAI_API_KEY
   refreshInterval: 5m
