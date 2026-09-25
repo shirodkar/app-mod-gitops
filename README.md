@@ -23,22 +23,48 @@ oc apply -f gitops/infra/application-openbao.yaml
 oc get pods -n openbao --watch
 ```
 
+Wait for the `openbao-0` pod to show `1/1 Running`.
+
 ### 3. Initialize OpenBao Secrets
 
-Wait for the OpenBao pod to be ready, then initialize and unseal:
+Initialize and unseal:
 
 ```bash
 oc exec -n openbao openbao-0 -- sh -c 'bao operator init -key-shares=1 -key-threshold=1'
-oc exec -n openbao openbao-0 -- sh -c 'bao operator unseal <unseal_key>'
+# Save the Unseal Key and Root Token from the output
+
+oc exec -n openbao openbao-0 -- sh -c 'bao operator unseal <UNSEAL_KEY>'
 ```
 
-Configure secrets engine and Kubernetes auth:
+Configure secrets engine, Kubernetes auth, and application secrets:
 
 ```bash
-oc exec -n openbao openbao-0 -- sh -c 'export BAO_TOKEN=<root_token> && bao secrets enable -version=1 -path=kv kv && bao auth enable kubernetes && bao write auth/kubernetes/config kubernetes_host=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT && printf "path \"kv/*\" { capabilities = [\"read\",\"list\"] }" | bao policy write eso-policy - && bao write auth/kubernetes/role/eso-role bound_service_account_names=openbao-eso-auth bound_service_account_namespaces=openbao policies=eso-policy ttl=1h && bao write kv/secrets/ai API_KEY="<llm-api-key>"'
-```
+oc exec -n openbao openbao-0 -- sh -c '
+  export BAO_TOKEN=<ROOT_TOKEN>
 
-Add application secrets as needed via the OpenBao CLI or UI.
+  # Enable KV secrets engine
+  bao secrets enable -version=1 -path=kv kv
+
+  # Enable Kubernetes auth
+  bao auth enable kubernetes
+  bao write auth/kubernetes/config \
+    kubernetes_host=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT
+
+  # Create policy for ESO
+  printf "path \"kv/*\" { capabilities = [\"read\",\"list\"] }" | \
+    bao policy write eso-policy -
+
+  # Create role for ESO service account
+  bao write auth/kubernetes/role/eso-role \
+    bound_service_account_names=openbao-eso-auth \
+    bound_service_account_namespaces=openbao \
+    policies=eso-policy \
+    ttl=1h
+
+  # Add application secrets
+  bao write kv/secrets/ai API_KEY="<LLM_API_KEY>"
+'
+```
 
 Access the OpenBao UI:
 
@@ -52,11 +78,20 @@ Deploys operators, RBAC, Dev Spaces, MTA, ClusterSecretStore, and ExternalSecret
 
 ```bash
 oc apply -f gitops/infra/application-infra.yaml
-oc patch console.operator.openshift.io cluster --type=json -p '[{"op":"add","path":"/spec/plugins/-","value":"gitops-plugin"}]'
+oc patch console.operator.openshift.io cluster --type=json \
+  -p '[{"op":"add","path":"/spec/plugins/-","value":"gitops-plugin"}]'
 oc get applications -n openshift-gitops -w
 ```
 
 ### 5. Add the Mammoth Application to MTA
+
+Wait for all MTA pods to be running:
+
+```bash
+oc get pods -n openshift-mta --watch
+```
+
+Then configure the application, archetype, and analysis profile:
 
 ```
 +-----------+      +---------+       +----------------+
@@ -128,16 +163,23 @@ curl -sk -X PUT "$HUB/archetypes/$ARCH_ID" \
   }"
 ```
 
-Dev Spaces and MTA are also included in the infrastructure Helm chart and deploy automatically.
-
 ## Repository Structure
 
-| Directory                           | Strategy    | Purpose                                                            |
-| ----------------------------------- | ----------- | ------------------------------------------------------------------ |
-| `gitops/install-gitops.yaml`        | Plain       | Bootstrap GitOps operator + RBAC                                   |
-| `gitops/infra/`                     | ArgoCD Apps | OpenBao + infrastructure application definitions                   |
-| `gitops/applications/`              | ArgoCD Apps | App-of-apps for each EAP workload                                  |
-| `manifests/plain/openbao/`          | Plain       | OpenBao supplementary resources (Namespace, SA, Route)             |
-| `manifests/helm/infra/`             | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA               |
-| `manifests/kustomize/applications/` | Kustomize   | EAP app workloads (base + per-app overlays)                        |
-| `eap/applications/`                 | —           | EAP server CLI scripts and module configs                          |
+| Directory                  | Strategy    | Purpose                                                |
+| -------------------------- | ----------- | ------------------------------------------------------ |
+| `gitops/install-gitops.yaml` | Plain     | Bootstrap GitOps operator + RBAC                       |
+| `gitops/infra/`            | ArgoCD Apps | OpenBao + infrastructure application definitions       |
+| `manifests/plain/openbao/` | Plain       | OpenBao supplementary resources (Namespace, SA, Route) |
+| `manifests/helm/infra/`   | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA   |
+
+## Troubleshooting
+
+### `oc exec` fails with webhook error
+
+If `oc exec` returns an error about `devworkspace-webhookserver`, the Dev Spaces operator left a stale webhook. Remove it:
+
+```bash
+oc delete validatingwebhookconfiguration controller.devworkspace.io
+```
+
+The webhook is recreated when the Dev Spaces operator fully deploys during step 4.

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working with this GitOps reposit
 
 ## Project Overview
 
-This is a **GitOps repository** for managing Kubernetes/OpenShift infrastructure and applications using **ArgoCD**. It deploys EAP (Enterprise Application Platform) workloads through an app-of-apps pattern, using two ArgoCD Applications (OpenBao deployed first, then infrastructure) and Kustomize for application workloads.
+This is a **GitOps repository** for managing Kubernetes/OpenShift infrastructure and applications using **ArgoCD**. It uses two ArgoCD Applications (OpenBao deployed first, then infrastructure) to set up the platform for EAP application modernization.
 
 ## Repository Structure
 
@@ -15,12 +15,6 @@ app-mod-gitops/
 │   ├── infra/                           # Infrastructure applications
 │   │   ├── application-openbao.yaml     # Multi-source: OpenBao Helm repo + plain manifests
 │   │   └── application-infra.yaml       # Single-source: infra Helm chart from Git
-│   └── applications/                    # App-of-apps deployments (per EAP app)
-│       └── <app-name>/
-│           ├── application-of-apps.yaml
-│           └── apps/
-│               ├── deploy/              # Deploy-phase ArgoCD Application
-│               └── s2i/                 # S2I build-phase ArgoCD Application
 ├── manifests/                           # Kubernetes manifests
 │   ├── helm/                            # Helm charts
 │   │   └── infra/                       # Infrastructure Helm chart
@@ -38,16 +32,9 @@ app-mod-gitops/
 │   │           ├── checlusters.yaml
 │   │           ├── mta.yaml
 │   │           └── console-plugins.yaml
-│   ├── plain/                           # Plain YAML manifests
-│   │   └── openbao/                     # OpenBao supplementary resources
-│   │       └── resources.yaml           # Namespace, ServiceAccount, Route
-│   └── kustomize/                       # Kustomize overlays
-│       └── applications/
-│           ├── base/                    # Shared base (deploy + s2i)
-│           └── <app-name>/              # Per-app overlay (deploy + s2i)
-└── eap/                                 # EAP server configuration
-    └── applications/
-        └── mammoth-ear/                 # CLI scripts
+│   └── plain/                           # Plain YAML manifests
+│       └── openbao/                     # OpenBao supplementary resources
+│           └── resources.yaml           # Namespace, ServiceAccount, Route
 ```
 
 ## Deployment Order
@@ -85,7 +72,6 @@ The repo uses three manifest strategies:
 1. **Helm (remote)** — OpenBao chart from `https://openbao.github.io/openbao-helm` (v0.28.3), values inline in `application-openbao.yaml`
 2. **Helm (Git)** — Infrastructure chart at `manifests/helm/infra` (namespaces, RBAC, operators, AppProjects, Dev Spaces, MTA, ClusterSecretStore)
 3. **Plain YAML** — OpenBao supplementary resources at `manifests/plain/openbao/` (Namespace, ServiceAccount, Route)
-4. **Kustomize** (`manifests/kustomize/applications`): Application workloads — WildFly servers, build configs, external secrets. Uses base/overlay pattern with per-app overlays.
 
 ### OpenBao (Multi-Source Application)
 
@@ -176,13 +162,6 @@ appProjects:
 3. Add sync wave "3" annotation to both
 4. Ensure the target namespace exists (add to namespaces if needed)
 
-### Adding a New EAP Application
-
-1. Add EAP config scripts under `eap/applications/<app-name>/`
-2. Create Kustomize overlay under `manifests/kustomize/applications/<app-name>/` (with `deploy/` and `s2i/` subdirectories)
-3. Create app-of-apps structure under `gitops/applications/<app-name>/`
-4. Add the application namespaces to `application-infra.yaml` parameters
-
 ### Updating OpenBao Version
 
 1. Update `targetRevision` in the OpenBao source entry in `gitops/infra/application-openbao.yaml`
@@ -229,7 +208,6 @@ The infra Application additionally has:
 - **manifests/helm/infra/Chart.yaml**: Helm chart metadata (no dependencies)
 - **manifests/helm/infra/values.yaml**: Default Helm values (AppProject config)
 - **manifests/helm/infra/templates/**: Infrastructure Kubernetes resource templates
-- **manifests/kustomize/applications/base/**: Shared Kustomize base for EAP apps
 
 ## Best Practices
 
