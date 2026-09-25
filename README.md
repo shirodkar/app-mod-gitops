@@ -65,8 +65,7 @@ oc get applications -n openshift-gitops -w
 ```
 
 ```bash
-CLUSTER_URL_SUFFIX=$(oc whoami -c | sed -E 's|[^/]+/api-([^:]+):[0-9]+/.*|\1|')
-HUB="https://mta-openshift-mta.apps.$CLUSTER_URL_SUFFIX/hub"
+HUB="https://$(oc get route mta -n openshift-mta -o jsonpath='{.spec.host}')/hub"
 
 EAP_TAG_ID=$(curl -sk "$HUB/tags" | jq '[.[] | select(.name=="EAP" and .category.name=="Runtime")][0].id')
 if [ "$EAP_TAG_ID" = "null" ] || [ -z "$EAP_TAG_ID" ]; then
