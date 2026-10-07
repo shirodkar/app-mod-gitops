@@ -51,6 +51,7 @@ oc get route -n openbao
 ### 4. Install Infrastructure
 
 Deploys operators, RBAC, Dev Spaces, MTA, ClusterSecretStore, and ExternalSecrets.
+Wait for the 'infra' ArgoCD application to be Synced and Healthy.
 
 ```bash
 oc apply -f gitops/infra/application-infra.yaml
