@@ -19,6 +19,7 @@ spec:
   containerRegistry: {}
   devEnvironments:
     startTimeoutSeconds: 600
+    trustedCA: true
     defaultEditor: che-incubator/che-code/latest
     defaultComponents:
       - name: dev
