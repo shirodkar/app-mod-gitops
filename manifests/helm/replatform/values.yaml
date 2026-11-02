@@ -1,0 +1,17 @@
+namespace: cicd
+
+source:
+  gitUri: https://github.com/shirodkar/mammoth-ear.git
+  gitRef: replatform
+
+builder:
+  image: registry.redhat.io/jboss-eap-8/eap8-openjdk17-builder-openshift-rhel8:latest
+  pullSecretName: rh-image-pull-secret
+
+runtime:
+  image: registry.redhat.io/jboss-eap-8/eap8-openjdk17-runtime-openshift-rhel8:latest
+
+env:
+  customInstallDirectories: extensions
+  postgresqlDriverVersion: 42.7.3
+  artifactDir: ear/target

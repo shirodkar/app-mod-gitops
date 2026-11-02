@@ -1,0 +1,79 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: mammoth-eap8-build-artifacts
+  namespace: {{ .Values.namespace }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: mammoth-eap8-build-artifacts:latest
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: DockerImage
+        name: {{ .Values.builder.image }}
+      pullSecret:
+        name: {{ .Values.builder.pullSecretName }}
+      env:
+        - name: CUSTOM_INSTALL_DIRECTORIES
+          value: {{ .Values.env.customInstallDirectories }}
+        - name: POSTGRESQL_DRIVER_VERSION
+          value: {{ .Values.env.postgresqlDriverVersion | quote }}
+        - name: ARTIFACT_DIR
+          value: {{ .Values.env.artifactDir }}
+      incremental: true
+      forcePull: true
+  source:
+    type: Git
+    git:
+      uri: {{ .Values.source.gitUri }}
+      ref: {{ .Values.source.gitRef }}
+  triggers:
+    - type: ConfigChange
+  runPolicy: Serial
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: mammoth-eap8
+  namespace: {{ .Values.namespace }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: mammoth-eap8:latest
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: DockerImage
+        name: {{ .Values.runtime.image }}
+      pullSecret:
+        name: {{ .Values.builder.pullSecretName }}
+  source:
+    type: Dockerfile
+    dockerfile: |-
+      FROM {{ .Values.runtime.image }}
+      COPY --chown=jboss:root /server $JBOSS_HOME
+      RUN chmod -R ug+rwX $JBOSS_HOME
+    images:
+      - from:
+          kind: ImageStreamTag
+          name: mammoth-eap8-build-artifacts:latest
+        paths:
+          - sourcePath: /opt/server
+            destinationDir: .
+  triggers:
+    - type: ImageChange
+      imageChange:
+        from:
+          kind: ImageStreamTag
+          name: mammoth-eap8-build-artifacts:latest
+    - type: ConfigChange
+  runPolicy: Serial
