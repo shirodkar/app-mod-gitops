@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-secrets
+  namespace: mammoth-ear
+type: Opaque
+data:
+  POSTGRESQL_PASSWORD: bWFtbW90aA==
+  POSTGRESQL_USER: bWFtbW90aA==
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: mammoth-ear
+data:
+  POSTGRESQL_DATASOURCE: MammothDS
+  POSTGRESQL_JNDI: 'java:jboss/datasources/MammothDS'
+  POSTGRESQL_URL: 'jdbc:postgresql://postgresql.database.svc.cluster.local:5432/mammothdb'
+---
+apiVersion: wildfly.org/v1alpha1
+kind: WildFlyServer
+metadata:
+  name: mammoth
+  namespace: mammoth-ear
+spec:
+  applicationImage: 'image-registry.openshift-image-registry.svc:5000/cicd/mammoth-eap8'
+  bootableJar: false
+  envFrom:
+    - configMapRef:
+        name: database-config
+    - secretRef:
+        name: database-secrets
+  replicas: 1
