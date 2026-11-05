@@ -162,7 +162,19 @@ curl -sk -X PUT "$HUB/archetypes/$ARCH_ID" \
   }"
 ```
 
-### 6. Set up CICD for the Mammoth Application on OpenShift
+### 6. Set up Database for the Mammoth Application on OpenShift Virtualization
+
+```bash
+oc apply -f gitops/applications/mammoth-ear/application-rehost.yaml
+```
+
+Wait for the 'rehost' ArgoCD application to be Synced and Healthy:
+
+```bash
+oc get applications -n openshift-gitops -w
+```
+
+### 7. Set up CICD for the Mammoth Application on OpenShift
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-replatform.yaml
