@@ -38,5 +38,5 @@ spec:
         - /users
     - group: kubevirt.io
       kind: VirtualMachine
-      jsonPointers:
-        - /spec/template/spec/domain/devices/interfaces
+      jqPathExpressions:
+        - .spec.template.spec.domain.devices.interfaces[].macAddress
