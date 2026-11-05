@@ -5,6 +5,7 @@ metadata:
   namespace: database
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: Replace=true
   labels:
     app: postgresql-vm
 spec:
