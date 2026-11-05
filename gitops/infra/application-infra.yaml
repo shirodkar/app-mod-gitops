@@ -32,7 +32,3 @@ spec:
     - kind: ServiceAccount
       jsonPointers:
         - /imagePullSecrets
-    - group: kubevirt.io
-      kind: VirtualMachine
-      jsonPointers:
-        - /spec

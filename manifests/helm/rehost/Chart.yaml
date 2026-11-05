@@ -1,0 +1,6 @@
+apiVersion: v2
+name: rehost
+description: Helm chart for rehosted PostgreSQL VM
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

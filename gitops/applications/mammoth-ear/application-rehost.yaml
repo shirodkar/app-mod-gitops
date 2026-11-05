@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rehost
+  namespace: openshift-gitops
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    repoURL: 'https://github.com/shirodkar/app-mod-gitops.git'
+    targetRevision: HEAD
+    path: manifests/helm/rehost
+    helm: {}
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
+  ignoreDifferences:
+    - group: kubevirt.io
+      kind: VirtualMachine
+      jsonPointers:
+        - /spec

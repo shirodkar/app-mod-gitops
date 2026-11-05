@@ -1,0 +1,12 @@
+namespace: database
+
+vm:
+  name: postgresql-vm
+  cores: 2
+  memory: 4Gi
+  image: quay.io/containerdisks/fedora:latest
+
+database:
+  name: mammothdb
+  user: mammoth
+  password: mammoth

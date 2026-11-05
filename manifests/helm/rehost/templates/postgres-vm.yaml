@@ -1,24 +1,21 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: postgresql-vm
-  namespace: database
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
-    argocd.argoproj.io/sync-options: Replace=true,ServerSideApply=false
+  name: {{ .Values.vm.name }}
+  namespace: {{ .Values.namespace }}
   labels:
-    app: postgresql-vm
+    app: {{ .Values.vm.name }}
 spec:
   runStrategy: Always
   template:
     metadata:
       labels:
-        app: postgresql-vm
-        kubevirt.io/domain: postgresql-vm
+        app: {{ .Values.vm.name }}
+        kubevirt.io/domain: {{ .Values.vm.name }}
     spec:
       domain:
         cpu:
-          cores: 2
+          cores: {{ .Values.vm.cores }}
         devices:
           disks:
             - disk:
@@ -32,14 +29,14 @@ spec:
               name: default
         resources:
           requests:
-            memory: 4Gi
+            memory: {{ .Values.vm.memory }}
       networks:
         - name: default
           pod: {}
       volumes:
         - name: rootdisk
           containerDisk:
-            image: quay.io/containerdisks/fedora:latest
+            image: {{ .Values.vm.image }}
         - name: cloudinitdisk
           cloudInitNoCloud:
             userData: |
@@ -54,9 +51,9 @@ spec:
                 - postgresql-setup --initdb
                 - systemctl enable postgresql
                 - systemctl start postgresql
-                - sudo -u postgres psql -c "CREATE USER mammoth WITH PASSWORD 'mammoth';"
-                - sudo -u postgres psql -c "CREATE DATABASE mammothdb OWNER mammoth;"
-                - sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE mammothdb TO mammoth;"
+                - sudo -u postgres psql -c "CREATE USER {{ .Values.database.user }} WITH PASSWORD '{{ .Values.database.password }}';"
+                - sudo -u postgres psql -c "CREATE DATABASE {{ .Values.database.name }} OWNER {{ .Values.database.user }};"
+                - sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE {{ .Values.database.name }} TO {{ .Values.database.user }};"
                 - sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /var/lib/pgsql/data/postgresql.conf
                 - sed -i "s/peer/md5/g; s/ident/md5/g" /var/lib/pgsql/data/pg_hba.conf
                 - echo "host all all 0.0.0.0/0 md5" >> /var/lib/pgsql/data/pg_hba.conf
@@ -65,10 +62,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgresql-vm
-  namespace: database
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
+  name: {{ .Values.vm.name }}
+  namespace: {{ .Values.namespace }}
 spec:
   ports:
     - name: postgresql
@@ -76,5 +71,5 @@ spec:
       port: 5432
       targetPort: 5432
   selector:
-    app: postgresql-vm
+    app: {{ .Values.vm.name }}
   type: ClusterIP
