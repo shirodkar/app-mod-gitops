@@ -9,10 +9,12 @@ GitOps repository for deploying application modernization infrastructure and EAP
 
 ## Setup
 
-### 1. Install GitOps Operator
+### 1. Install GitOps Operator and Create Groups
 
 ```bash
 oc apply -f gitops/install-gitops.yaml
+oc adm groups new cluster-admins admin
+oc adm groups new developers developer
 ```
 
 Wait for all pods to be Ready
