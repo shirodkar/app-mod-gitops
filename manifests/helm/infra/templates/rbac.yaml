@@ -1,21 +1,3 @@
-kind: Group
-apiVersion: user.openshift.io/v1
-metadata:
-  name: cluster-admins
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
-users:
-  - admin
----
-kind: Group
-apiVersion: user.openshift.io/v1
-metadata:
-  name: developers
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
-users:
-  - developer
----
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:

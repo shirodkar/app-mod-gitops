@@ -32,10 +32,6 @@ spec:
     - kind: ServiceAccount
       jsonPointers:
         - /imagePullSecrets
-    - group: user.openshift.io
-      kind: Group
-      jsonPointers:
-        - /users
     - group: kubevirt.io
       kind: VirtualMachine
       jqPathExpressions:
