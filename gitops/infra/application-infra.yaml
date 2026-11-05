@@ -34,5 +34,5 @@ spec:
         - /imagePullSecrets
     - group: kubevirt.io
       kind: VirtualMachine
-      jqPathExpressions:
-        - .spec.template.spec.domain.devices.interfaces[].macAddress
+      jsonPointers:
+        - /spec
