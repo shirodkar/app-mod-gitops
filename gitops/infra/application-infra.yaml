@@ -36,3 +36,7 @@ spec:
       kind: Group
       jsonPointers:
         - /users
+    - group: kubevirt.io
+      kind: VirtualMachine
+      jsonPointers:
+        - /spec/template/spec/domain/devices/interfaces
