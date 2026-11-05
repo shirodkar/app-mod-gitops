@@ -13,6 +13,11 @@ GitOps repository for deploying application modernization infrastructure and EAP
 
 ```bash
 oc apply -f gitops/install-gitops.yaml
+```
+
+Wait for all pods to be Ready
+
+```bash
 oc get pods -n openshift-gitops --watch
 ```
 
@@ -20,10 +25,13 @@ oc get pods -n openshift-gitops --watch
 
 ```bash
 oc apply -f gitops/infra/application-openbao.yaml
-oc get pods -n openbao --watch
 ```
 
-Wait for the `openbao-0` pod to show `1/1 Running`.
+Wait for the `openbao-0` pod to show `1/1 Running`:
+
+```bash
+oc get pods -n openbao --watch
+```
 
 ### 3. Initialize OpenBao Secrets
 
@@ -31,8 +39,12 @@ Initialize and unseal:
 
 ```bash
 oc exec -n openbao openbao-0 -- sh -c 'bao operator init -key-shares=1 -key-threshold=1'
-# Save the Unseal Key and Root Token from the output
+```
 
+Save the Unseal Key and Root Token from the output.
+Unseal OpenBAO using the Unseal Key:
+
+```bash
 oc exec -n openbao openbao-0 -- sh -c 'bao operator unseal <UNSEAL_KEY>'
 ```
 
@@ -40,6 +52,12 @@ Configure secrets engine, Kubernetes auth, and application secrets:
 
 ```bash
 oc exec -n openbao openbao-0 -- sh -c 'export BAO_TOKEN=<ROOT_TOKEN> && bao secrets enable -version=1 -path=kv kv && bao auth enable kubernetes && bao write auth/kubernetes/config kubernetes_host=https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT && printf "path \"kv/*\" { capabilities = [\"read\",\"list\"] }" | bao policy write eso-policy - && bao write auth/kubernetes/role/eso-role bound_service_account_names=openbao-eso-auth bound_service_account_namespaces=openbao policies=eso-policy ttl=1h && bao write kv/secrets/ai API_KEY="<LLM_API_KEY>"'
+```
+
+Wait for the 'openbao' ArgoCD application to be Synced and Healthy:
+
+```bash
+oc get applications -n openshift-gitops -w
 ```
 
 To access the OpenBao UI:
@@ -51,11 +69,14 @@ oc get route -n openbao
 ### 4. Install Infrastructure
 
 Deploys operators, RBAC, Dev Spaces, MTA, ClusterSecretStore, and ExternalSecrets.
-Wait for the 'infra' ArgoCD application to be Synced and Healthy.
 
 ```bash
 oc apply -f gitops/infra/application-infra.yaml
-oc patch console.operator.openshift.io cluster --type=json -p '[{"op":"add","path":"/spec/plugins/-","value":"gitops-plugin"}]'
+```
+
+Wait for the 'infra' ArgoCD application to be Synced and Healthy:
+
+```bash
 oc get applications -n openshift-gitops -w
 ```
 
@@ -139,14 +160,28 @@ curl -sk -X PUT "$HUB/archetypes/$ARCH_ID" \
   }"
 ```
 
+### 6. Set up CICD for the Mammoth Application on OpenShift
+
+```bash
+oc apply -f gitops/applications/mammoth-ear/application-replatform.yaml
+```
+
+Wait for the 'replatform' ArgoCD application to be Synced and Healthy:
+
+```bash
+oc get applications -n openshift-gitops -w
+```
+
 ## Repository Structure
 
-| Directory                  | Strategy    | Purpose                                                |
-| -------------------------- | ----------- | ------------------------------------------------------ |
-| `gitops/install-gitops.yaml` | Plain     | Bootstrap GitOps operator + RBAC                       |
-| `gitops/infra/`            | ArgoCD Apps | OpenBao + infrastructure application definitions       |
-| `manifests/plain/openbao/` | Plain       | OpenBao supplementary resources (Namespace, SA, Route) |
-| `manifests/helm/infra/`   | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA   |
+| Directory                                | Strategy    | Purpose                                                        |
+| ---------------------------------------- | ----------- | -------------------------------------------------------------- |
+| `gitops/install-gitops.yaml`             | Plain       | Bootstrap GitOps operator + RBAC                               |
+| `gitops/infra/`                          | ArgoCD Apps | OpenBao + infrastructure application definitions               |
+| `gitops/applications/mammoth-ear/`       | ArgoCD Apps | Mammoth EAP8 replatform application definition                 |
+| `manifests/plain/openbao/`               | Plain       | OpenBao supplementary resources (Namespace, SA, Route)         |
+| `manifests/helm/infra/`                  | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA, DB VM   |
+| `manifests/helm/replatform/`             | Helm        | Mammoth EAP8 build pipeline, WildFlyServer, and DB config      |
 
 ## Troubleshooting
 
