@@ -27,7 +27,12 @@ spec:
       - SkipDryRunOnMissingResource=true
       - ServerSideApply=true
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
   ignoreDifferences:
     - kind: ServiceAccount
       jsonPointers:
         - /imagePullSecrets
+    - group: user.openshift.io
+      kind: Group
+      jsonPointers:
+        - /users
