@@ -1,0 +1,79 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: postgresql-vm
+  namespace: database
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    app: postgresql-vm
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        app: postgresql-vm
+        kubevirt.io/domain: postgresql-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+        resources:
+          requests:
+            memory: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: redhat
+              chpasswd:
+                expire: false
+              packages:
+                - postgresql-server
+                - postgresql
+              runcmd:
+                - postgresql-setup --initdb
+                - systemctl enable postgresql
+                - systemctl start postgresql
+                - sudo -u postgres psql -c "CREATE USER mammoth WITH PASSWORD 'mammoth';"
+                - sudo -u postgres psql -c "CREATE DATABASE mammothdb OWNER mammoth;"
+                - sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE mammothdb TO mammoth;"
+                - sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /var/lib/pgsql/data/postgresql.conf
+                - sed -i "s/peer/md5/g; s/ident/md5/g" /var/lib/pgsql/data/pg_hba.conf
+                - echo "host all all 0.0.0.0/0 md5" >> /var/lib/pgsql/data/pg_hba.conf
+                - systemctl restart postgresql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-vm
+  namespace: database
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  ports:
+    - name: postgresql
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: postgresql-vm
+  type: ClusterIP
