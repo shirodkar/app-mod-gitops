@@ -85,7 +85,7 @@ spec:
             image: quay.io/containerdisks/fedora:latest
         - name: cloudinitdisk
           cloudInitNoCloud:
-            userDataSecretRef:
+            secretRef:
               name: mammoth-eap-vm-cloudinit
 ---
 apiVersion: v1
