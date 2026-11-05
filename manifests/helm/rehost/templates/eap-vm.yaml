@@ -82,7 +82,7 @@ spec:
       volumes:
         - name: rootdisk
           containerDisk:
-            image: quay.io/containerdisks/fedora:latest
+            image: quay.io/containerdisks/fedora:40
         - name: cloudinitdisk
           cloudInitNoCloud:
             secretRef:
