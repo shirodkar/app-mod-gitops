@@ -1,0 +1,130 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: mammoth-eap-vm
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: mammoth-eap-vm
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        app: mammoth-eap-vm
+        kubevirt.io/domain: mammoth-eap-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: rootdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+          interfaces:
+            - masquerade: {}
+              name: default
+        resources:
+          requests:
+            memory: 4Gi
+      networks:
+        - name: default
+          pod: {}
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:latest
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              password: redhat
+              chpasswd:
+                expire: false
+              packages:
+                - java-17-openjdk-devel
+                - maven
+                - git
+                - unzip
+                - wget
+              runcmd:
+                - mkdir -p /opt/eap
+                - cd /opt/eap
+                - git clone -b eap8 https://github.com/shirodkar/mammoth-ear.git /opt/eap/mammoth-ear
+                - cd /opt/eap/mammoth-ear
+                - mvn clean package -DskipTests
+                - wget -q https://github.com/jboss-container-images/jboss-eap-8-openshift-image/releases/download/8.0.0.GA/jboss-eap-8.0.0.zip -O /tmp/jboss-eap-8.0.0.zip || true
+                - |
+                  if [ -f /tmp/jboss-eap-8.0.0.zip ]; then
+                    unzip -q /tmp/jboss-eap-8.0.0.zip -d /opt/eap
+                    EAP_HOME=$(find /opt/eap -maxdepth 1 -type d -name 'jboss-eap-*' | head -1)
+                  else
+                    # Fallback: use WildFly as EAP-compatible runtime
+                    wget -q https://github.com/wildfly/wildfly/releases/download/31.0.0.Final/wildfly-31.0.0.Final.zip -O /tmp/wildfly.zip
+                    unzip -q /tmp/wildfly.zip -d /opt/eap
+                    EAP_HOME=/opt/eap/wildfly-31.0.0.Final
+                  fi
+                  echo "EAP_HOME=$EAP_HOME" >> /etc/environment
+                  # Install PostgreSQL JDBC driver
+                  mkdir -p $EAP_HOME/modules/org/postgresql/main
+                  wget -q https://jdbc.postgresql.org/download/postgresql-42.7.3.jar -O $EAP_HOME/modules/org/postgresql/main/postgresql-jdbc.jar
+                  cat > $EAP_HOME/modules/org/postgresql/main/module.xml << 'MODEOF'
+                  <?xml version="1.0" encoding="UTF-8"?>
+                  <module xmlns="urn:jboss:module:1.3" name="org.postgresql">
+                    <resources>
+                      <resource-root path="postgresql-jdbc.jar"/>
+                    </resources>
+                    <dependencies>
+                      <module name="java.sql"/>
+                      <module name="jakarta.transaction.api"/>
+                    </dependencies>
+                  </module>
+                  MODEOF
+                  # Configure datasource via CLI
+                  cat > /tmp/configure-ds.cli << 'CLIEOF'
+                  embed-server --server-config=standalone.xml
+                  /subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql, driver-module-name=org.postgresql, driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
+                  data-source add --name=MammothDS --jndi-name=java:jboss/datasources/MammothDS --driver-name=postgresql --connection-url=jdbc:postgresql://postgresql-vm.database.svc.cluster.local:5432/mammothdb --user-name=mammoth --password=mammoth --use-java-context=true --jta=true --min-pool-size=5 --max-pool-size=20 --enabled=true
+                  stop-embedded-server
+                  CLIEOF
+                  $EAP_HOME/bin/jboss-cli.sh --file=/tmp/configure-ds.cli
+                  # Deploy the application
+                  cp /opt/eap/mammoth-ear/ear/target/*.ear $EAP_HOME/standalone/deployments/ || true
+                  # Start EAP
+                  $EAP_HOME/bin/standalone.sh -b 0.0.0.0 &
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mammoth-eap-vm
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: admin
+      protocol: TCP
+      port: 9990
+      targetPort: 9990
+  selector:
+    app: mammoth-eap-vm
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mammoth-eap-vm
+  namespace: {{ .Values.namespace }}
+spec:
+  to:
+    kind: Service
+    name: mammoth-eap-vm
+    weight: 100
+  port:
+    targetPort: http
+  wildcardPolicy: None
