@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: database-secrets
-  namespace: mammoth-ear
+  namespace: replatform
 type: Opaque
 data:
   POSTGRESQL_PASSWORD: bWFtbW90aA==
@@ -12,7 +12,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: database-config
-  namespace: mammoth-ear
+  namespace: replatform
 data:
   POSTGRESQL_DATASOURCE: MammothDS
   POSTGRESQL_JNDI: 'java:jboss/datasources/MammothDS'
@@ -22,7 +22,7 @@ apiVersion: wildfly.org/v1alpha1
 kind: WildFlyServer
 metadata:
   name: mammoth
-  namespace: mammoth-ear
+  namespace: replatform
 spec:
   applicationImage: 'image-registry.openshift-image-registry.svc:5000/cicd/mammoth-eap8'
   bootableJar: false

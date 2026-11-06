@@ -6,4 +6,4 @@ metadata:
 kind: Namespace
 apiVersion: v1
 metadata:
-  name: mammoth-ear
+  name: replatform
