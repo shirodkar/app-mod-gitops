@@ -1,13 +1,13 @@
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
-  name: mammoth-eap8-build-artifacts
+  name: replatform-replatform-mammoth-eap8-build-artifacts
   namespace: {{ .Values.namespace }}
 spec:
   output:
     to:
       kind: ImageStreamTag
-      name: mammoth-eap8-build-artifacts:latest
+      name: replatform-replatform-mammoth-eap8-build-artifacts:latest
   successfulBuildsHistoryLimit: 5
   failedBuildsHistoryLimit: 5
   strategy:
@@ -39,13 +39,13 @@ spec:
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
-  name: mammoth-eap8
+  name: replatform-mammoth-eap8
   namespace: {{ .Values.namespace }}
 spec:
   output:
     to:
       kind: ImageStreamTag
-      name: mammoth-eap8:latest
+      name: replatform-mammoth-eap8:latest
   successfulBuildsHistoryLimit: 5
   failedBuildsHistoryLimit: 5
   strategy:
@@ -65,7 +65,7 @@ spec:
     images:
       - from:
           kind: ImageStreamTag
-          name: mammoth-eap8-build-artifacts:latest
+          name: replatform-replatform-mammoth-eap8-build-artifacts:latest
         paths:
           - sourcePath: /opt/server
             destinationDir: .
@@ -74,6 +74,6 @@ spec:
       imageChange:
         from:
           kind: ImageStreamTag
-          name: mammoth-eap8-build-artifacts:latest
+          name: replatform-replatform-mammoth-eap8-build-artifacts:latest
     - type: ConfigChange
   runPolicy: Serial

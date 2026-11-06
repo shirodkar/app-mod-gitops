@@ -24,7 +24,7 @@ metadata:
   name: mammoth
   namespace: replatform
 spec:
-  applicationImage: 'image-registry.openshift-image-registry.svc:5000/cicd/mammoth-eap8'
+  applicationImage: 'image-registry.openshift-image-registry.svc:5000/cicd/replatform-mammoth-eap8'
   bootableJar: false
   envFrom:
     - configMapRef:
