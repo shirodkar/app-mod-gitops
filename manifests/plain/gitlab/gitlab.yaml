@@ -1,0 +1,69 @@
+apiVersion: apps.gitlab.com/v1beta1
+kind: GitLab
+metadata:
+  name: gitlab
+  namespace: gitlab-system
+spec:
+  chart:
+    version: "8.5.1"
+    values:
+      global:
+        hosts:
+          domain: placeholder.example.com
+        ingress:
+          configureCertmanager: false
+          class: none
+        initialRootPassword:
+          secret: gitlab-root-password
+        kas:
+          enabled: false
+        appConfig:
+          omniauth:
+            enabled: false
+      certmanager:
+        install: false
+      nginx-ingress:
+        enabled: false
+      prometheus:
+        install: false
+      registry:
+        enabled: false
+      gitlab-runner:
+        install: false
+      gitlab:
+        webservice:
+          resources:
+            requests:
+              memory: 2Gi
+              cpu: 500m
+        sidekiq:
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 250m
+        gitaly:
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 250m
+          persistence:
+            size: 5Gi
+      redis:
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+      postgresql:
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-root-password
+  namespace: gitlab-system
+type: Opaque
+stringData:
+  password: RedHat123!

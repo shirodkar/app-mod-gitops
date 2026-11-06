@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitlab
+  namespace: openshift-gitops
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    repoURL: 'https://github.com/shirodkar/app-mod-gitops.git'
+    targetRevision: HEAD
+    path: manifests/plain/gitlab
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
+      - ServerSideApply=true

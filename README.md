@@ -162,7 +162,7 @@ curl -sk -X PUT "$HUB/archetypes/$ARCH_ID" \
   }"
 ```
 
-### 6. Set up Database for the Mammoth Application on OpenShift Virtualization
+### 6. Set up the Mammoth Application VM and Database VM on OpenShift Virtualization
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-rehost.yaml
