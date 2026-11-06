@@ -1,4 +1,4 @@
-namespace: rehosted
+namespace: rehost
 
 vm:
   name: postgresql-vm

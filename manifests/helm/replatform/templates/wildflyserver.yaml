@@ -16,7 +16,7 @@ metadata:
 data:
   POSTGRESQL_DATASOURCE: MammothDS
   POSTGRESQL_JNDI: 'java:jboss/datasources/MammothDS'
-  POSTGRESQL_URL: 'jdbc:postgresql://postgresql-vm.rehosted.svc.cluster.local:5432/mammothdb'
+  POSTGRESQL_URL: 'jdbc:postgresql://postgresql-vm.rehost.svc.cluster.local:5432/mammothdb'
 ---
 apiVersion: wildfly.org/v1alpha1
 kind: WildFlyServer

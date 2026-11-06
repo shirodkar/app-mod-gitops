@@ -38,7 +38,7 @@ stringData:
         cat > /tmp/configure-ds.cli <<CLIEOF
         embed-server --server-config=standalone.xml
         /subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql, driver-module-name=org.postgresql, driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
-        data-source add --name=MammothDS --jndi-name=java:jboss/datasources/MammothDS --driver-name=postgresql --connection-url=jdbc:postgresql://postgresql-vm.rehosted.svc.cluster.local:5432/mammothdb --user-name=mammoth --password=mammoth --use-java-context=true --jta=true --min-pool-size=5 --max-pool-size=20 --enabled=true
+        data-source add --name=MammothDS --jndi-name=java:jboss/datasources/MammothDS --driver-name=postgresql --connection-url=jdbc:postgresql://postgresql-vm.rehost.svc.cluster.local:5432/mammothdb --user-name=mammoth --password=mammoth --use-java-context=true --jta=true --min-pool-size=5 --max-pool-size=20 --enabled=true
         stop-embedded-server
         CLIEOF
         sed -i 's/^        //' /tmp/configure-ds.cli
