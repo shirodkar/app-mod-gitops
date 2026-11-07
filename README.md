@@ -82,7 +82,7 @@ Wait for the 'infra' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
-### 5. Add the Mammoth Application to MTA
+### 5. Add Applications to MTA
 
 Wait for all MTA pods to be running:
 
@@ -90,7 +90,7 @@ Wait for all MTA pods to be running:
 oc get pods -n openshift-mta --watch
 ```
 
-Then configure the application, archetype, and analysis profile:
+Then configure the applications, archetypes, and analysis profiles:
 
 ```
 +-----------+      +---------+       +----------------+
@@ -107,7 +107,8 @@ if [ "$EAP_TAG_ID" = "null" ] || [ -z "$EAP_TAG_ID" ]; then
 fi
 echo "EAP_TAG_ID=$EAP_TAG_ID"
 
-AP_ID=$(curl -sk -X POST "$HUB/analysis/profiles" \
+# Create analysis profiles
+AP_EAP8_ID=$(curl -sk -X POST "$HUB/analysis/profiles" \
   -H "Content-Type: application/json" \
   -d "$(cat <<'EOF'
 {
@@ -132,8 +133,31 @@ AP_ID=$(curl -sk -X POST "$HUB/analysis/profiles" \
 }
 EOF
 )" | jq -r '.id')
-echo "AP_ID=$AP_ID"
+echo "AP_EAP8_ID=$AP_EAP8_ID"
 
+AP_QUARKUS_ID=$(curl -sk -X POST "$HUB/analysis/profiles" \
+  -H "Content-Type: application/json" \
+  -d "$(cat <<'EOF'
+{
+  "name": "Quarkus",
+  "mode": {"withDeps": true},
+  "scope": {"withKnownLibs": true, "packages": {"included": [], "excluded": []}},
+  "rules": {
+    "targets": [
+      {"id": 2},
+      {"id": 5},
+      {"id": 6, "selection": "konveyor.io/target=openjdk17"},
+      {"id": 8},
+      {"id": 9}
+    ],
+    "labels": {"included": [], "excluded": []}
+  }
+}
+EOF
+)" | jq -r '.id')
+echo "AP_QUARKUS_ID=$AP_QUARKUS_ID"
+
+# Create Mammoth EAR application with EAP8 profile
 curl -sk -X POST "$HUB/applications" \
   -H "Content-Type: application/json" \
   -d "{
@@ -157,7 +181,42 @@ curl -sk -X PUT "$HUB/archetypes/$ARCH_ID" \
     \"criteria\": [{\"id\": $EAP_TAG_ID}],
     \"profiles\": [{
       \"name\": \"eap8\",
-      \"analysisProfile\": {\"id\": $AP_ID}
+      \"analysisProfile\": {\"id\": $AP_EAP8_ID}
+    }]
+  }"
+
+# Create Mammoth Backend application with Quarkus profile
+QUARKUS_TAG_ID=$(curl -sk "$HUB/tags" | jq '[.[] | select(.name=="Quarkus" and .category.name=="Runtime")][0].id')
+if [ "$QUARKUS_TAG_ID" = "null" ] || [ -z "$QUARKUS_TAG_ID" ]; then
+  echo "WARN: Quarkus tag not found, using EAP tag instead"
+  QUARKUS_TAG_ID=$EAP_TAG_ID
+fi
+echo "QUARKUS_TAG_ID=$QUARKUS_TAG_ID"
+
+curl -sk -X POST "$HUB/applications" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"Mammoth Backend\",
+    \"repository\": {\"kind\": \"git\", \"url\": \"https://github.com/shirodkar/mammoth-backend.git\"},
+    \"tags\": [{\"id\": $EAP_TAG_ID}]
+  }"
+
+ARCH_QUARKUS_ID=$(curl -sk -X POST "$HUB/archetypes" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"eap8-to-quarkus\",
+    \"criteria\": [{\"id\": $EAP_TAG_ID}]
+  }" | jq '.id')
+echo "ARCH_QUARKUS_ID=$ARCH_QUARKUS_ID"
+
+curl -sk -X PUT "$HUB/archetypes/$ARCH_QUARKUS_ID" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"eap8-to-quarkus\",
+    \"criteria\": [{\"id\": $EAP_TAG_ID}],
+    \"profiles\": [{
+      \"name\": \"quarkus\",
+      \"analysisProfile\": {\"id\": $AP_QUARKUS_ID}
     }]
   }"
 ```
