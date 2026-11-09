@@ -36,14 +36,12 @@ spec:
               memory: 512Mi
               cpu: 500m
           readinessProbe:
-            httpGet:
-              path: /q/health/ready
+            tcpSocket:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /q/health/live
+            tcpSocket:
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
