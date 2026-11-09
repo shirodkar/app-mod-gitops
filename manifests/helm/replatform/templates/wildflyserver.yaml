@@ -26,9 +26,6 @@ metadata:
 spec:
   applicationImage: 'image-registry.openshift-image-registry.svc:5000/cicd/replatform-mammoth-eap8'
   bootableJar: false
-  env:
-    - name: MAMMOTH_API_URL
-      value: 'http://localhost:8080/backend/api/mammoths'
   envFrom:
     - configMapRef:
         name: database-config
