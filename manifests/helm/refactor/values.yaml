@@ -1,0 +1,8 @@
+namespace: refactor
+
+source:
+  gitUri: https://github.com/shirodkar/mammoth-backend.git
+  gitRef: main
+
+builder:
+  image: registry.access.redhat.com/ubi8/openjdk-17:latest

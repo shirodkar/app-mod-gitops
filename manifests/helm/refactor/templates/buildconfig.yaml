@@ -1,0 +1,33 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: refactor-mammoth-backend
+  namespace: {{ .Values.namespace }}
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: refactor-mammoth-backend
+  namespace: {{ .Values.namespace }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: refactor-mammoth-backend:latest
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: DockerImage
+        name: {{ .Values.builder.image }}
+      forcePull: true
+  source:
+    type: Git
+    git:
+      uri: {{ .Values.source.gitUri }}
+      ref: {{ .Values.source.gitRef }}
+  triggers:
+    - type: ConfigChange
+  runPolicy: Serial
