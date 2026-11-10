@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: mammoth-backend
-          image: image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/refactor-mammoth-backend:latest
+          image: image-registry.openshift-image-registry.svc:5000/cicd/refactor-mammoth-backend:latest
           ports:
             - containerPort: 8080
               name: http

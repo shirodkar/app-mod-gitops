@@ -2,13 +2,13 @@ apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
   name: refactor-mammoth-backend
-  namespace: {{ .Values.namespace }}
+  namespace: cicd
 ---
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
   name: refactor-mammoth-backend
-  namespace: {{ .Values.namespace }}
+  namespace: cicd
 spec:
   output:
     to:
