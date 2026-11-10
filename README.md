@@ -233,13 +233,25 @@ Wait for the 'rehost' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
-### 7. Set up CICD for the Mammoth Application on OpenShift
+### 7. Set up CICD and WildFly Server for the Mammoth Application on OpenShift
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-replatform.yaml
 ```
 
 Wait for the 'replatform' ArgoCD application to be Synced and Healthy:
+
+```bash
+oc get applications -n openshift-gitops -w
+```
+
+### 8. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
+
+```bash
+oc apply -f gitops/applications/mammoth-ear/application-refactor.yaml
+```
+
+Wait for the 'refactor' ArgoCD application to be Synced and Healthy:
 
 ```bash
 oc get applications -n openshift-gitops -w
