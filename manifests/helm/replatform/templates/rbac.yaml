@@ -11,3 +11,31 @@ subjects:
   - kind: Group
     apiGroup: rbac.authorization.k8s.io
     name: system:serviceaccounts:replatform
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developers-admin
+  namespace: replatform
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: developers
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developers-admin
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: developers
