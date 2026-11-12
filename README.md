@@ -101,11 +101,17 @@ Then configure the applications, archetypes, and analysis profiles:
 ```bash
 HUB="https://$(oc get route mta -n openshift-mta -o jsonpath='{.spec.host}')/hub"
 
+# Get tag IDs
 EAP_TAG_ID=$(curl -sk "$HUB/tags" | jq '[.[] | select(.name=="EAP" and .category.name=="Runtime")][0].id')
 if [ "$EAP_TAG_ID" = "null" ] || [ -z "$EAP_TAG_ID" ]; then
   echo "ERROR: EAP tag not found"; exit 1
 fi
+QUARKUS_TAG_ID=$(curl -sk "$HUB/tags" | jq '[.[] | select(.name=="Quarkus" and .category.name=="Runtime")][0].id')
+if [ "$QUARKUS_TAG_ID" = "null" ] || [ -z "$QUARKUS_TAG_ID" ]; then
+  echo "ERROR: Quarkus tag not found"; exit 1
+fi
 echo "EAP_TAG_ID=$EAP_TAG_ID"
+echo "QUARKUS_TAG_ID=$QUARKUS_TAG_ID"
 
 # Create analysis profiles
 AP_EAP8_ID=$(curl -sk -X POST "$HUB/analysis/profiles" \
@@ -157,7 +163,7 @@ EOF
 )" | jq -r '.id')
 echo "AP_QUARKUS_ID=$AP_QUARKUS_ID"
 
-# Create Mammoth EAR application with EAP8 profile
+# Create Mammoth EAR application (tagged EAP)
 curl -sk -X POST "$HUB/applications" \
   -H "Content-Type: application/json" \
   -d "{
@@ -166,59 +172,40 @@ curl -sk -X POST "$HUB/applications" \
     \"tags\": [{\"id\": $EAP_TAG_ID}]
   }"
 
-ARCH_ID=$(curl -sk -X POST "$HUB/archetypes" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"name\": \"eap7\",
-    \"criteria\": [{\"id\": $EAP_TAG_ID}]
-  }" | jq '.id')
-echo "ARCH_ID=$ARCH_ID"
-
-curl -sk -X PUT "$HUB/archetypes/$ARCH_ID" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"name\": \"eap7\",
-    \"criteria\": [{\"id\": $EAP_TAG_ID}],
-    \"profiles\": [{
-      \"name\": \"eap8\",
-      \"analysisProfile\": {\"id\": $AP_EAP8_ID}
-    }]
-  }"
-
-# Create Mammoth Backend application with Quarkus profile
-QUARKUS_TAG_ID=$(curl -sk "$HUB/tags" | jq '[.[] | select(.name=="Quarkus" and .category.name=="Runtime")][0].id')
-if [ "$QUARKUS_TAG_ID" = "null" ] || [ -z "$QUARKUS_TAG_ID" ]; then
-  echo "WARN: Quarkus tag not found, using EAP tag instead"
-  QUARKUS_TAG_ID=$EAP_TAG_ID
-fi
-echo "QUARKUS_TAG_ID=$QUARKUS_TAG_ID"
-
+# Create Mammoth Backend application (tagged Quarkus)
 curl -sk -X POST "$HUB/applications" \
   -H "Content-Type: application/json" \
   -d "{
     \"name\": \"Mammoth Backend\",
     \"repository\": {\"kind\": \"git\", \"url\": \"https://github.com/shirodkar/mammoth-backend.git\"},
-    \"tags\": [{\"id\": $EAP_TAG_ID}]
+    \"tags\": [{\"id\": $QUARKUS_TAG_ID}]
   }"
 
+# Create EAP archetype (matches EAP-tagged apps) with EAP8 profile
+ARCH_EAP_ID=$(curl -sk -X POST "$HUB/archetypes" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"eap7-to-eap8\",
+    \"criteria\": [{\"id\": $EAP_TAG_ID}],
+    \"profiles\": [{
+      \"name\": \"eap8\",
+      \"analysisProfile\": {\"id\": $AP_EAP8_ID}
+    }]
+  }" | jq '.id')
+echo "ARCH_EAP_ID=$ARCH_EAP_ID"
+
+# Create Quarkus archetype (matches Quarkus-tagged apps) with Quarkus profile
 ARCH_QUARKUS_ID=$(curl -sk -X POST "$HUB/archetypes" \
   -H "Content-Type: application/json" \
   -d "{
     \"name\": \"eap8-to-quarkus\",
-    \"criteria\": [{\"id\": $EAP_TAG_ID}]
-  }" | jq '.id')
-echo "ARCH_QUARKUS_ID=$ARCH_QUARKUS_ID"
-
-curl -sk -X PUT "$HUB/archetypes/$ARCH_QUARKUS_ID" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"name\": \"eap8-to-quarkus\",
-    \"criteria\": [{\"id\": $EAP_TAG_ID}],
+    \"criteria\": [{\"id\": $QUARKUS_TAG_ID}],
     \"profiles\": [{
       \"name\": \"quarkus\",
       \"analysisProfile\": {\"id\": $AP_QUARKUS_ID}
     }]
-  }"
+  }" | jq '.id')
+echo "ARCH_QUARKUS_ID=$ARCH_QUARKUS_ID"
 ```
 
 ### 6. Set up the Mammoth Application VM and Database VM on OpenShift Virtualization
