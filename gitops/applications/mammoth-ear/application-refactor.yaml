@@ -25,3 +25,4 @@ spec:
       kind: Deployment
       jsonPointers:
         - /spec/template/spec/containers/0/image
+        - /metadata/annotations/image.openshift.io~1triggers
