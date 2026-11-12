@@ -232,6 +232,8 @@ Wait for the 'replatform' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
+Manually add your pull secret to the 'cicd' namespace and name it 'rh-image-pull-secret'.
+
 ### 8. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
 
 ```bash
