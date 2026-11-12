@@ -266,3 +266,14 @@ oc delete validatingwebhookconfiguration controller.devworkspace.io
 ```
 
 The webhook is recreated when the Dev Spaces operator fully deploys during step 4.
+
+### OpenBao is sealed / ClusterSecretStore shows "unable to create client / 'infra' application shows Degraded status in ArgoCD"
+
+OpenBao seals itself whenever its pod restarts (node reboot, eviction, redeployment). Check and unseal:
+
+```bash
+oc exec -n openbao openbao-0 -- sh -c 'bao status'
+oc exec -n openbao openbao-0 -- sh -c 'bao operator unseal <UNSEAL_KEY>'
+```
+
+The ClusterSecretStore and ExternalSecrets will reconnect automatically once OpenBao is unsealed.
