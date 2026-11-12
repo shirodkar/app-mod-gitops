@@ -5,9 +5,6 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: mammoth-backend
-  annotations:
-    image.openshift.io/triggers: >-
-      [{"from":{"kind":"ImageStreamTag","name":"refactor-mammoth-backend:latest","namespace":"cicd"},"fieldPath":"spec.template.spec.containers[?(@.name==\"mammoth-backend\")].image"}]
 spec:
   replicas: 1
   selector:
