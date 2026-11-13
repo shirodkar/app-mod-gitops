@@ -86,7 +86,7 @@ oc get applications -n openshift-gitops -w
 
 ### 5. Add Applications to MTA
 
-Wait for all MTA pods to be running:
+Wait for all 6 MTA pods to be show `1/1 Running`:
 
 ```bash
 oc get pods -n openshift-mta --watch
@@ -234,9 +234,9 @@ Wait for the 'replatform' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
-Manually add your pull secret to the 'cicd' namespace and name it 'rh-image-pull-secret'.
+### 8. Manually add your pull secret to the 'cicd' namespace and name it 'rh-image-pull-secret'.
 
-### 8. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
+### 9. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-refactor.yaml
@@ -254,10 +254,13 @@ oc get applications -n openshift-gitops -w
 | ---------------------------------------- | ----------- | -------------------------------------------------------------- |
 | `gitops/install-gitops.yaml`             | Plain       | Bootstrap GitOps operator + RBAC                               |
 | `gitops/infra/`                          | ArgoCD Apps | OpenBao + infrastructure application definitions               |
-| `gitops/applications/mammoth-ear/`       | ArgoCD Apps | Mammoth EAP8 replatform application definition                 |
+| `gitops/applications/mammoth-ear/`       | ArgoCD Apps | Rehost, replatform, refactor, and GitLab app definitions       |
 | `manifests/plain/openbao/`               | Plain       | OpenBao supplementary resources (Namespace, SA, Route)         |
-| `manifests/helm/infra/`                  | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA, DB VM   |
-| `manifests/helm/replatform/`             | Helm        | Mammoth EAP8 build pipeline, WildFlyServer, and DB config      |
+| `manifests/plain/gitlab/`               | Plain       | GitLab operator, subscription, and GitLab CR                   |
+| `manifests/helm/infra/`                  | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA           |
+| `manifests/helm/rehost/`                | Helm        | PostgreSQL VM and EAP8 VM on OpenShift Virtualization          |
+| `manifests/helm/replatform/`             | Helm        | Mammoth EAP8 S2I build pipeline, WildFlyServer, and DB config  |
+| `manifests/helm/refactor/`              | Helm        | Mammoth Backend Quarkus build pipeline and deployment           |
 
 ## Troubleshooting
 
