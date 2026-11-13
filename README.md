@@ -6,6 +6,7 @@ GitOps repository for deploying application modernization infrastructure and EAP
 
 - OpenShift cluster with cluster-admin access
 - `oc` CLI logged in as cluster admin
+- Create users - admin, developer, plateng
 
 ## Setup
 
@@ -15,6 +16,7 @@ GitOps repository for deploying application modernization infrastructure and EAP
 oc apply -f gitops/install-gitops.yaml
 oc adm groups new cluster-admins admin
 oc adm groups new developers developer
+oc adm groups new platengs plateng
 ```
 
 Wait for all pods to be Ready
