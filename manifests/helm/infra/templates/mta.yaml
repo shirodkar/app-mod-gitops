@@ -64,7 +64,7 @@ metadata:
 spec:
   feature_auth_required: 'false'
   kai_llm_baseurl: 'https://maas-rhdp.apps.maas.redhatworkshops.io/v1'
-  kai_llm_model: deepseek-r1-distill-qwen-14b
+  kai_llm_model: claude-opus-4-6
   kai_llm_provider: openai
   kai_llm_proxy_enabled: true
   kai_solution_server_enabled: true
