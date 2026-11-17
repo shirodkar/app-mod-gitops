@@ -25,7 +25,6 @@ spec:
         maxDuration: 5m
     syncOptions:
       - SkipDryRunOnMissingResource=true
-      - ServerSideApply=true
       - CreateNamespace=true
       - RespectIgnoreDifferences=true
   ignoreDifferences:
