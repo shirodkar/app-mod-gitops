@@ -42,7 +42,7 @@ spec:
           ui:
             enabled: true
     - repoURL: 'https://github.com/shirodkar/app-mod-gitops.git'
-      targetRevision: HEAD
+      targetRevision: ocp5
       path: manifests/plain/openbao
   syncPolicy:
     automated:

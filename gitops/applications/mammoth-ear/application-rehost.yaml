@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/shirodkar/app-mod-gitops.git'
-    targetRevision: HEAD
+    targetRevision: ocp5
     path: manifests/helm/rehost
     helm: {}
   syncPolicy:
