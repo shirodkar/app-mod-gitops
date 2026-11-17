@@ -9,6 +9,15 @@ metadata:
   name: openbao-eso-auth
   namespace: openbao
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openbao-eso-auth-token
+  namespace: openbao
+  annotations:
+    kubernetes.io/service-account.name: openbao-eso-auth
+type: kubernetes.io/service-account-token
+---
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
