@@ -4,7 +4,6 @@ metadata:
   annotations:
     deployOVS: 'false'
     argocd.argoproj.io/sync-wave: "4"
-    argocd.argoproj.io/sync-options: Replace=true,ServerSideApply=false
   name: kubevirt-hyperconverged
   namespace: openshift-cnv
 spec:
