@@ -1,0 +1,23 @@
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mammoth-backend
+  labels:
+    helm.sh/chart: quickstart-java-service-0.2.0
+    app.kubernetes.io/name: mammoth-backend
+    app.kubernetes.io/instance: mammoth-backend
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    konveyor.io/archetype: "eap8-to-quarkus"
+  annotations:
+    konveyor.io/source-repository: https://github.com/shirodkar/mammoth-backend.git
+spec:
+  to:
+    kind: Service
+    name: mammoth-backend
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
