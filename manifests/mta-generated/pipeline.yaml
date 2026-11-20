@@ -1,0 +1,161 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: mammoth
+  labels:
+    helm.sh/chart: quickstart-openshift-pipelines-0.1.0
+    app.kubernetes.io/name: mammoth
+    app.kubernetes.io/instance: mammoth
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    konveyor.io/archetype: "eap7-to-eap8"
+    pipeline.openshift.io/strategy: docker
+    pipeline.openshift.io/type: kubernetes
+spec:
+  params:
+    - name: GIT_REPO
+      type: string
+      description: Source code repository URL
+      default: "https://github.com/shirodkar/mammoth-ear.git"
+    - name: GIT_REVISION
+      type: string
+      description: Git revision to build
+      default: "main"
+    - name: IMAGE_NAME
+      type: string
+      description: Full image reference to push
+      default: "image-registry.openshift-image-registry.svc:5000/$(params.NAMESPACE)/mammoth"
+    - name: NAMESPACE
+      type: string
+      description: Target namespace (used in image registry path)
+      default: "mammoth"
+    - name: PATH_CONTEXT
+      type: string
+      description: Path context within the source repository
+      default: "."
+    - name: CONFIG_REPO
+      type: string
+      description: Configuration repository URL
+      default: "https://github.com/shirodkar/app-mod-gitops.git"
+    - name: CONFIG_BRANCH
+      type: string
+      description: Configuration repository branch
+      default: "ocp5"
+  workspaces:
+    - name: source
+    - name: config-source
+  tasks:
+    - name: fetch-source
+      params:
+        - name: URL
+          value: $(params.GIT_REPO)
+        - name: REVISION
+          value: $(params.GIT_REVISION)
+        - name: SUBDIRECTORY
+          value: ""
+        - name: DELETE_EXISTING
+          value: "true"
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: output
+          workspace: source
+    - name: fetch-config
+      params:
+        - name: URL
+          value: $(params.CONFIG_REPO)
+        - name: REVISION
+          value: $(params.CONFIG_BRANCH)
+        - name: SUBDIRECTORY
+          value: ""
+        - name: DELETE_EXISTING
+          value: "true"
+      runAfter:
+        - fetch-source
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: output
+          workspace: config-source
+    - name: prepare-build
+      params:
+        - name: SCRIPT
+          value: |
+            cp $(workspaces.kubeconfig-dir.path)/Dockerfile $(workspaces.manifest-dir.path)/Dockerfile
+      runAfter:
+        - fetch-config
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: manifest-dir
+          workspace: source
+        - name: kubeconfig-dir
+          workspace: config-source
+    - name: build-image
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE_NAME):$(params.GIT_REVISION)
+        - name: TLS_VERIFY
+          value: "false"
+        - name: CONTEXT
+          value: $(params.PATH_CONTEXT)
+      runAfter:
+        - prepare-build
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: source
+          workspace: source
+    - name: update-config-repo
+      params:
+        - name: SCRIPT
+          value: |
+            cd $(workspaces.manifest-dir.path)
+            sed -i 's|image.tag:.*|image.tag: $(params.GIT_REVISION)|' values.yaml
+            git config user.email "pipeline@openshift.local"
+            git config user.name "OpenShift Pipeline"
+            git add values.yaml
+            git commit -m "Update image tag to $(params.GIT_REVISION)" || echo "No changes to commit"
+            git push origin $(params.CONFIG_BRANCH)
+      runAfter:
+        - build-image
+      taskRef:
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+        resolver: cluster
+      workspaces:
+        - name: manifest-dir
+          workspace: config-source
