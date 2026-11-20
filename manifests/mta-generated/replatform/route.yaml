@@ -1,0 +1,23 @@
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mammoth
+  labels:
+    helm.sh/chart: quickstart-java-service-0.2.0
+    app.kubernetes.io/name: mammoth
+    app.kubernetes.io/instance: mammoth
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+    konveyor.io/archetype: "eap7-to-eap8"
+  annotations:
+    konveyor.io/source-repository: https://github.com/shirodkar/mammoth-ear.git
+spec:
+  to:
+    kind: Service
+    name: mammoth
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
