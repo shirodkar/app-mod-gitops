@@ -1,0 +1,25 @@
+Pipeline "mammoth" has been created.
+
+Build strategy: buildah
+
+To trigger a PipelineRun:
+
+  cat <<EOF | oc create -f -
+  apiVersion: tekton.dev/v1
+  kind: PipelineRun
+  metadata:
+    generateName: mammoth-run-
+  spec:
+    pipelineRef:
+      name: mammoth
+    params:
+      - name: NAMESPACE
+        value: $(oc project -q)
+    workspaces:
+      - name: source
+        persistentVolumeClaim:
+          claimName: mammoth-source
+      - name: config-source
+        persistentVolumeClaim:
+          claimName: mammoth-config
+  EOF
