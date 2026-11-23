@@ -88,8 +88,7 @@ ARCH_EAP_ID=$(curl -sk -X POST "$HUB/archetypes" \
   -d "{
   \"name\": \"eap7-to-eap8\",
   \"criteria\": [{\"id\": $EAP_TAG_ID}],
-  \"profiles\": [{\"name\": \"eap8\", \"analysisProfile\": {\"id\": $AP_EAP8_ID}}],
-  \"generators\": [{\"id\": 2}, {\"id\": 3}, {\"id\": 4}]
+  \"profiles\": [{\"name\": \"eap8\", \"analysisProfile\": {\"id\": $AP_EAP8_ID}}]
 }" | jq '.id')
 echo "ARCH_EAP_ID=$ARCH_EAP_ID"
 
@@ -99,8 +98,7 @@ ARCH_QUARKUS_ID=$(curl -sk -X POST "$HUB/archetypes" \
   -d "{
   \"name\": \"eap8-to-quarkus\",
   \"criteria\": [{\"id\": $QUARKUS_TAG_ID}],
-  \"profiles\": [{\"name\": \"quarkus\", \"analysisProfile\": {\"id\": $AP_QUARKUS_ID}}],
-  \"generators\": [{\"id\": 2}, {\"id\": 3}, {\"id\": 4}]
+  \"profiles\": [{\"name\": \"quarkus\", \"analysisProfile\": {\"id\": $AP_QUARKUS_ID}}]
 }" | jq '.id')
 echo "ARCH_QUARKUS_ID=$ARCH_QUARKUS_ID"
 
