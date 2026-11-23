@@ -108,6 +108,11 @@ bash scripts/setup-mta.sh
 
 The script is located at [`scripts/setup-mta.sh`](scripts/setup-mta.sh).
 
+After the script completes, add generators to both archetypes via the MTA UI:
+1. Navigate to **Archetypes** in MTA
+2. Edit each archetype (`eap7-to-eap8` and `eap8-to-quarkus`)
+3. Add generators: **Quickstart-Java-Service**, **Quickstart-OpenShift-GitOps**, **Quickstart-OpenShift-Pipelines**
+
 ### 6. Set up the Mammoth Application VM and Database VM on OpenShift Virtualization
 
 ```bash
