@@ -86,7 +86,7 @@ oc get applications -n openshift-gitops -w
 
 ### 5. Add Applications to MTA
 
-Wait for all 6 MTA pods to be show `1/1 Running`:
+Wait for all 6 MTA pods to show `1/1 Running`:
 
 ```bash
 oc get pods -n openshift-mta --watch
