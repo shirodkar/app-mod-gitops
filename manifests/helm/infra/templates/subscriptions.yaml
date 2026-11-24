@@ -121,3 +121,19 @@ spec:
   name: openshift-pipelines-operator-rh
   source: redhat-operators
   sourceNamespace: openshift-marketplace
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/trustification-operator.openshift-operators: ''
+  name: trustification-operator
+  namespace: openshift-operators
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: trustification-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace

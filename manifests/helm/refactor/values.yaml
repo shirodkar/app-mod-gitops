@@ -6,3 +6,5 @@ source:
 
 builder:
   image: registry.access.redhat.com/ubi8/openjdk-17:latest
+
+tpaUrl: https://tpa.apps.cluster.example.com
