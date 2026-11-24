@@ -71,7 +71,8 @@ spec:
               set -e
               echo "Preparing S2I source directory..."
               rm -rf /tmp/src
-              ln -s $(workspaces.source.path) /tmp/src
+              mkdir -p /tmp/src
+              cp -a $(workspaces.source.path)/. /tmp/src/
               echo "Running S2I assemble..."
               /usr/local/s2i/assemble
               echo "S2I assemble complete."
