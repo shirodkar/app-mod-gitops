@@ -70,6 +70,8 @@ spec:
             script: |
               #!/bin/bash
               set -e
+              echo "Copying source to S2I input directory..."
+              cp -r $(workspaces.source.path)/* /tmp/src/
               echo "Running S2I assemble..."
               /usr/local/s2i/assemble
               echo "S2I assemble complete."
