@@ -59,7 +59,6 @@ spec:
         steps:
           - name: s2i-build
             image: {{ .Values.builder.image }}
-            workingDir: $(workspaces.source.path)
             env:
               - name: CUSTOM_INSTALL_DIRECTORIES
                 value: {{ .Values.env.customInstallDirectories }}
@@ -70,8 +69,9 @@ spec:
             script: |
               #!/bin/bash
               set -e
-              echo "Copying source to S2I input directory..."
-              cp -r $(workspaces.source.path)/* /tmp/src/
+              echo "Preparing S2I source directory..."
+              rm -rf /tmp/src
+              ln -s $(workspaces.source.path) /tmp/src
               echo "Running S2I assemble..."
               /usr/local/s2i/assemble
               echo "S2I assemble complete."
