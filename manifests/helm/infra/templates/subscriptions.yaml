@@ -126,14 +126,14 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   labels:
-    operators.coreos.com/trustification-operator.openshift-operators: ''
-  name: trustification-operator
+    operators.coreos.com/trustify-operator.openshift-operators: ''
+  name: trustify-operator
   namespace: openshift-operators
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
-  channel: stable
+  channel: alpha
   installPlanApproval: Automatic
-  name: trustification-operator
-  source: redhat-operators
+  name: trustify-operator
+  source: community-operators
   sourceNamespace: openshift-marketplace
