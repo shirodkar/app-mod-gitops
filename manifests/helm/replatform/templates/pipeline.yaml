@@ -11,13 +11,8 @@ spec:
     name: replatform-mammoth-eap8
   workspaces:
     - name: shared-workspace
-      volumeClaimTemplate:
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 2Gi
+      persistentVolumeClaim:
+        claimName: replatform-pipeline-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

@@ -11,13 +11,8 @@ spec:
     name: refactor-mammoth-backend
   workspaces:
     - name: shared-workspace
-      volumeClaimTemplate:
-        spec:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 2Gi
+      persistentVolumeClaim:
+        claimName: refactor-pipeline-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
