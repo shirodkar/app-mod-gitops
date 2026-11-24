@@ -26,3 +26,5 @@ spec:
   plugins:
     - gitops-plugin
     - pipelines-console-plugin
+    - kubevirt-plugin
+    - monitoring-plugin
