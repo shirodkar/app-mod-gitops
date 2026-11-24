@@ -1,0 +1,55 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: replatform-mammoth-eap8
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: mammoth
+spec:
+  params:
+    - name: GIT_REVISION
+      type: string
+      default: {{ .Values.source.gitRef }}
+      description: Git branch to build
+  tasks:
+
+    - name: build-artifacts
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: SCRIPT
+          value: |
+            echo "Starting S2I build for mammoth-eap8-build-artifacts..."
+            oc start-build replatform-mammoth-eap8-build-artifacts \
+              --commit=$(params.GIT_REVISION) \
+              --wait \
+              --follow
+            echo "S2I build complete."
+
+    - name: build-runtime
+      runAfter:
+        - build-artifacts
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: openshift-client
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: SCRIPT
+          value: |
+            echo "Starting runtime image build..."
+            oc start-build replatform-mammoth-eap8 \
+              --wait \
+              --follow
+            echo "Runtime image build complete."
