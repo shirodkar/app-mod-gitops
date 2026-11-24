@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: refactor-pipeline-pvc
+  namespace: cicd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: refactor-mammoth-backend
+  namespace: cicd
+  labels:
+    app.kubernetes.io/name: mammoth-backend
+spec:
+  params:
+    - name: GIT_REPO
+      type: string
+      default: {{ .Values.source.gitUri }}
+    - name: GIT_REVISION
+      type: string
+      default: {{ .Values.source.gitRef }}
+  workspaces:
+    - name: shared-workspace
+  tasks:
+
+    - name: fetch-source
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: URL
+          value: $(params.GIT_REPO)
+        - name: REVISION
+          value: $(params.GIT_REVISION)
+        - name: DELETE_EXISTING
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+
+    - name: build-app
+      runAfter:
+        - fetch-source
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: maven-build
+            image: {{ .Values.builder.image }}
+            workingDir: $(workspaces.source.path)
+            script: |
+              #!/bin/bash
+              set -e
+              echo "Building Quarkus application..."
+              mvn package -DskipTests
+              echo "Build complete."
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    - name: build-and-push-image
+      runAfter:
+        - build-app
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: create-dockerfile
+            image: registry.access.redhat.com/ubi8/ubi-minimal:latest
+            workingDir: $(workspaces.source.path)
+            script: |
+              #!/bin/bash
+              cat > $(workspaces.source.path)/Dockerfile <<'EOF'
+              FROM {{ .Values.builder.image }}
+              COPY --chown=1001:0 target/quarkus-app /deployments/
+              EOF
+              echo "Dockerfile created."
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    - name: push-image
+      runAfter:
+        - build-and-push-image
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/cicd/refactor-mammoth-backend:latest
+        - name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: shared-workspace
