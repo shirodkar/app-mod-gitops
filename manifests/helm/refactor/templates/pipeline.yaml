@@ -123,7 +123,7 @@ spec:
             image: docker.io/anchore/syft:latest
             workingDir: $(workspaces.source.path)
             command:
-              - syft
+              - /syft
             args:
               - dir:.
               - -o
