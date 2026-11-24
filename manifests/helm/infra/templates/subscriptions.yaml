@@ -105,3 +105,19 @@ spec:
   name: mta-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/openshift-pipelines-operator-rh.openshift-operators: ''
+  name: openshift-pipelines-operator-rh
+  namespace: openshift-operators
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  channel: latest
+  installPlanApproval: Automatic
+  name: openshift-pipelines-operator-rh
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
