@@ -125,7 +125,17 @@ Wait for the 'rehost' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
-### 7. Set up CICD and WildFly Server for the Mammoth Application on OpenShift
+### 7. Create Red Hat registry pull secret
+
+```bash
+oc create secret docker-registry rh-image-pull-secret \
+  -n cicd \
+  --docker-server=registry.redhat.io \
+  --docker-username=<your-rh-username> \
+  --docker-password=<your-rh-password>
+```
+
+### 8. Set up CICD and WildFly Server for the Mammoth Application on OpenShift
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-replatform.yaml
@@ -136,8 +146,6 @@ Wait for the 'replatform' ArgoCD application to be Synced and Healthy:
 ```bash
 oc get applications -n openshift-gitops -w
 ```
-
-### 8. Manually add your pull secret to the 'cicd' namespace and name it 'rh-image-pull-secret'.
 
 ### 9. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
 
