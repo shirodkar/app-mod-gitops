@@ -127,7 +127,9 @@ spec:
             script: |
               #!/bin/bash
               set -e
-              mkdir -p $HOME/.config/containers
+              mkdir -p $HOME/.config/containers /etc/containers
+              echo '[storage]' > /etc/containers/storage.conf
+              echo 'driver = "vfs"' >> /etc/containers/storage.conf
               echo '{"auths":{}}' > $HOME/.config/containers/auth.json
               if [ -f $(workspaces.registry-creds.path)/.dockerconfigjson ]; then
                 cat $(workspaces.registry-creds.path)/.dockerconfigjson | python3 -c "
