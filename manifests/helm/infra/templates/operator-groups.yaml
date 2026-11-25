@@ -46,14 +46,3 @@ metadata:
 spec:
   targetNamespaces:
     - openshift-mta
----
-apiVersion: operators.coreos.com/v1alpha2
-kind: OperatorGroup
-metadata:
-  name: trustify-operator-og
-  namespace: trustify-operator
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  targetNamespaces:
-    - trustify-operator

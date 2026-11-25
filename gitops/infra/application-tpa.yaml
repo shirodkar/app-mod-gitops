@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tpa
+  namespace: openshift-gitops
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: trustify
+  project: default
+  source:
+    repoURL: 'https://charts.openshift.io'
+    chart: redhat-trusted-profile-analyzer
+    targetRevision: 3.1.2
+    helm:
+      releaseName: tpa
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
