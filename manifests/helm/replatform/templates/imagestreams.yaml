@@ -9,19 +9,3 @@ kind: ImageStream
 metadata:
   name: replatform-mammoth-eap8
   namespace: {{ .Values.namespace }}
----
-apiVersion: image.openshift.io/v1
-kind: ImageStream
-metadata:
-  name: eap8-openjdk17-runtime
-  namespace: {{ .Values.namespace }}
-spec:
-  tags:
-    - name: latest
-      from:
-        kind: DockerImage
-        name: {{ .Values.runtime.image }}
-      importPolicy:
-        scheduled: true
-      referencePolicy:
-        type: Local
