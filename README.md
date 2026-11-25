@@ -142,7 +142,7 @@ oc create secret docker-registry rh-image-pull-secret \
 oc apply -f gitops/applications/mammoth-ear/application-replatform.yaml
 ```
 
-Wait for the 'replatform' ArgoCD application to be Synced and Healthy:
+Wait for the 'replatform' ArgoCD application to be Synced. It will show **Progressing** until the pipeline is run in the next step.
 
 ```bash
 oc get applications -n openshift-gitops -w
@@ -178,7 +178,7 @@ EOF
 oc apply -f gitops/applications/mammoth-ear/application-refactor.yaml
 ```
 
-Wait for the 'refactor' ArgoCD application to be Synced and Healthy:
+Wait for the 'refactor' ArgoCD application to be Synced. It will show **Progressing** until the pipeline is run in the next step.
 
 ```bash
 oc get applications -n openshift-gitops -w
