@@ -25,10 +25,10 @@ spec:
     - name: GIT_REVISION
       type: string
       default: {{ .Values.source.gitRef }}
+  taskRunTemplate:
+    serviceAccountName: tekton-builder
   workspaces:
     - name: shared-workspace
-    - name: dockerconfig
-      optional: true
   tasks:
 
     - name: fetch-source
@@ -125,5 +125,3 @@ spec:
       workspaces:
         - name: source
           workspace: shared-workspace
-        - name: dockerconfig
-          workspace: dockerconfig

@@ -25,6 +25,8 @@ spec:
     - name: GIT_REVISION
       type: string
       default: {{ .Values.source.gitRef }}
+  taskRunTemplate:
+    serviceAccountName: tekton-builder
   workspaces:
     - name: shared-workspace
   tasks:
