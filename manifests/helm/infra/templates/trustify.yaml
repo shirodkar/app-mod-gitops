@@ -1,0 +1,8 @@
+apiVersion: org.trustify/v1alpha1
+kind: Trustify
+metadata:
+  name: trustify
+  namespace: trustify-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec: {}
