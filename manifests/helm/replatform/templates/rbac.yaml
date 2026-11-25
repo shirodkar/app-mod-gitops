@@ -36,6 +36,16 @@ imagePullSecrets:
 secrets:
   - name: {{ .Values.builder.pullSecretName }}
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: builder
+  namespace: {{ .Values.namespace }}
+imagePullSecrets:
+  - name: {{ .Values.builder.pullSecretName }}
+secrets:
+  - name: {{ .Values.builder.pullSecretName }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
