@@ -146,11 +146,12 @@ spec:
               #!/bin/bash
               set -e
               echo "Uploading SBOM to Trustify..."
-              curl -s -X POST "http://{{ .Values.trustifyHost }}:8080/api/v2/sbom" \
+              RESPONSE=$(curl -sv -X POST "http://{{ .Values.trustifyHost }}:8080/api/v2/sbom" \
                 -H "Content-Type: application/json" \
-                -d @$(workspaces.source.path)/sbom.json \
-                && echo "SBOM uploaded successfully." \
-                || echo "WARN: Trustify upload failed. SBOM saved in workspace."
+                -d @$(workspaces.source.path)/sbom.json 2>&1)
+              echo "$RESPONSE"
+              echo ""
+              echo "Upload complete."
       workspaces:
         - name: source
           workspace: shared-workspace
