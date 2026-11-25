@@ -136,11 +136,11 @@ spec:
                 buildah login -u openshift -p $(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
                   --tls-verify=false image-registry.openshift-image-registry.svc:5000
               echo "Building runtime image..."
-              buildah bud --tls-verify=false \
+              buildah bud --storage-driver=vfs --tls-verify=false \
                 -t image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest \
                 $(workspaces.source.path)
               echo "Pushing runtime image..."
-              buildah push --tls-verify=false \
+              buildah push --storage-driver=vfs --tls-verify=false \
                 image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest
               echo "Done."
       workspaces:
