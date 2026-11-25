@@ -14,6 +14,45 @@ spec:
     targetRevision: 3.1.2
     helm:
       releaseName: tpa
+      valuesObject:
+        appDomain: apps.cluster-l5r76.dyn.redhatworkshops.io
+
+        database:
+          host: tpa-db
+          name: trustify
+          username: trustify
+          password: trustify123
+
+        storage:
+          type: filesystem
+          size: 5Gi
+
+        oidc:
+          issuerUrl: https://sso.apps.cluster-l5r76.dyn.redhatworkshops.io/realms/trustify
+          insecure: true
+          clients:
+            frontend:
+              clientId: trustify-ui
+
+        modules:
+          createDatabase:
+            enabled: true
+          migrateDatabase:
+            enabled: true
+          server:
+            enabled: true
+            resources:
+              requests:
+                cpu: 500m
+                memory: 2Gi
+          importer:
+            enabled: true
+            resources:
+              requests:
+                cpu: 500m
+                memory: 2Gi
+            workingDirectory:
+              size: 10Gi
   syncPolicy:
     automated:
       enabled: true
