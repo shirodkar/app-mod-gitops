@@ -128,6 +128,7 @@ oc get applications -n openshift-gitops -w
 ### 7. Create Red Hat registry pull secret
 
 ```bash
+oc create namespace cicd
 oc create secret docker-registry rh-image-pull-secret \
   -n cicd \
   --docker-server=registry.redhat.io \
