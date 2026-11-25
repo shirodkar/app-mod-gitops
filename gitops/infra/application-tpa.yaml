@@ -8,52 +8,55 @@ spec:
     server: 'https://kubernetes.default.svc'
     namespace: trustify
   project: default
-  source:
-    repoURL: 'https://charts.openshift.io'
-    chart: redhat-trusted-profile-analyzer
-    targetRevision: 3.1.2
-    helm:
-      releaseName: tpa
-      skipSchemaValidation: true
-      valuesObject:
-        appDomain: apps.cluster-l5r76.dyn.redhatworkshops.io
+  sources:
+    - repoURL: 'https://github.com/shirodkar/app-mod-gitops.git'
+      targetRevision: ocp5
+      path: manifests/plain/tpa
+    - repoURL: 'https://charts.openshift.io'
+      chart: redhat-trusted-profile-analyzer
+      targetRevision: 3.1.2
+      helm:
+        releaseName: tpa
+        skipSchemaValidation: true
+        valuesObject:
+          appDomain: apps.cluster-l5r76.dyn.redhatworkshops.io
 
-        database:
-          host: tpa-db
-          name: trustify
-          username: trustify
-          password: trustify123
+          database:
+            host: tpa-db
+            name: trustify
+            username: trustify
+            password: trustify123
 
-        storage:
-          type: filesystem
-          size: 5Gi
+          storage:
+            type: filesystem
+            size: 5Gi
 
-        oidc:
-          issuerUrl: https://sso.apps.cluster-l5r76.dyn.redhatworkshops.io/realms/trustify
-          insecure: true
-          clients:
-            frontend:
-              clientId: trustify-ui
+          oidc:
+            issuerUrl: https://sso.apps.cluster-l5r76.dyn.redhatworkshops.io/realms/trustify
+            insecure: true
+            clients:
+              frontend:
+                clientId: trustify-ui
 
-        modules:
-          createDatabase:
-            enabled: false
-          migrateDatabase:
-            enabled: false
-          server:
-            enabled: true
-            resources:
-              requests:
-                cpu: 500m
-                memory: 2Gi
-          importer:
-            enabled: true
-            resources:
-              requests:
-                cpu: 500m
-                memory: 2Gi
-            workingDirectory:
-              size: 10Gi
+          modules:
+            createDatabase:
+              enabled: false
+            migrateDatabase:
+              enabled: false
+            server:
+              enabled: true
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+            importer:
+              enabled: true
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+              workingDirectory:
+                size: 10Gi
   syncPolicy:
     automated:
       enabled: true
