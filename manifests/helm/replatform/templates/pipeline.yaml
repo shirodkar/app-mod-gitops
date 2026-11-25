@@ -54,41 +54,34 @@ spec:
     - name: build-artifacts
       runAfter:
         - fetch-source
-      taskSpec:
-        workspaces:
-          - name: source
-        steps:
-          - name: s2i-build
-            image: {{ .Values.builder.image }}
-            env:
-              - name: CUSTOM_INSTALL_DIRECTORIES
-                value: {{ .Values.env.customInstallDirectories }}
-              - name: POSTGRESQL_DRIVER_VERSION
-                value: {{ .Values.env.postgresqlDriverVersion | quote }}
-              - name: ARTIFACT_DIR
-                value: {{ .Values.env.artifactDir }}
-            script: |
-              #!/bin/bash
-              set -e
-              echo "Preparing S2I source directory..."
-              rm -rf /tmp/src
-              mkdir -p /tmp/src
-              cp -a $(workspaces.source.path)/. /tmp/src/
-              echo "Running S2I assemble..."
-              /usr/local/s2i/assemble
-              echo "S2I assemble complete."
-              cp -r /opt/server $(workspaces.source.path)/server
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: s2i-java
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8-build-artifacts:latest
+        - name: TLSVERIFY
+          value: "false"
+        - name: PATH_CONTEXT
+          value: .
       workspaces:
         - name: source
           workspace: shared-workspace
+        - name: dockerconfig
+          workspace: registry-credentials
 
-    - name: build-and-push-runtime
+    - name: create-dockerfile
       runAfter:
         - build-artifacts
       taskSpec:
         workspaces:
           - name: source
-          - name: credentials
         steps:
           - name: create-dockerfile
             image: {{ .Values.builder.image }}
@@ -101,33 +94,29 @@ spec:
               RUN chmod -R ug+rwX $JBOSS_HOME
               DEOF
               echo "Dockerfile created."
-          - name: build-and-push
-            image: quay.io/buildah/stable:latest
-            workingDir: $(workspaces.source.path)
-            securityContext:
-              capabilities:
-                add:
-                  - SETFCAP
-            script: |
-              #!/bin/bash
-              set -e
-              echo "Setting up registry credentials..."
-              mkdir -p $HOME/.config/containers
-              if [ -f $(workspaces.credentials.path)/.dockerconfigjson ]; then
-                cp $(workspaces.credentials.path)/.dockerconfigjson $HOME/.config/containers/auth.json
-              elif [ -f $(workspaces.credentials.path)/config.json ]; then
-                cp $(workspaces.credentials.path)/config.json $HOME/.config/containers/auth.json
-              fi
-              echo "Building runtime image..."
-              podman build --tls-verify=false \
-                -t image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest \
-                $(workspaces.source.path)
-              echo "Pushing runtime image..."
-              podman push --tls-verify=false \
-                image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest
-              echo "Done."
       workspaces:
         - name: source
           workspace: shared-workspace
-        - name: credentials
+
+    - name: build-runtime
+      runAfter:
+        - create-dockerfile
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest
+        - name: TLSVERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: dockerconfig
           workspace: registry-credentials
