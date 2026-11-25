@@ -94,7 +94,7 @@ spec:
             script: |
               #!/bin/bash
               cat > $(workspaces.source.path)/Dockerfile <<'DEOF'
-              FROM {{ .Values.runtime.image }}
+              FROM image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/eap8-openjdk17-runtime:latest
               COPY --chown=jboss:root server $JBOSS_HOME
               RUN chmod -R ug+rwX $JBOSS_HOME
               DEOF
