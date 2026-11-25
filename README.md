@@ -183,6 +183,27 @@ Wait for the 'refactor' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
+### 11. Run the Refactor Pipeline
+
+```bash
+oc create -f - <<'EOF'
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: refactor-mammoth-backend-run-
+  namespace: cicd
+spec:
+  pipelineRef:
+    name: refactor-mammoth-backend
+  taskRunTemplate:
+    serviceAccountName: tekton-builder
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: refactor-pipeline-pvc
+EOF
+```
+
 ## Repository Structure
 
 | Directory                                | Strategy    | Purpose                                                        |
