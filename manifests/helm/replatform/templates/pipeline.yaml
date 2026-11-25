@@ -107,22 +107,44 @@ spec:
     - name: build-runtime
       runAfter:
         - create-dockerfile
-      taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: buildah
-          - name: namespace
-            value: openshift-pipelines
-      params:
-        - name: IMAGE
-          value: image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest
-        - name: TLSVERIFY
-          value: "false"
+      taskSpec:
+        workspaces:
+          - name: source
+          - name: registry-creds
+        steps:
+          - name: build-and-push
+            image: quay.io/buildah/stable:latest
+            workingDir: $(workspaces.source.path)
+            securityContext:
+              capabilities:
+                add:
+                  - SETFCAP
+            script: |
+              #!/bin/bash
+              set -e
+              mkdir -p $HOME/.config/containers
+              echo '{"auths":{}}' > $HOME/.config/containers/auth.json
+              if [ -f $(workspaces.registry-creds.path)/.dockerconfigjson ]; then
+                cat $(workspaces.registry-creds.path)/.dockerconfigjson | python3 -c "
+              import json,sys
+              a=json.load(open('$HOME/.config/containers/auth.json'))
+              b=json.load(sys.stdin)
+              a['auths'].update(b.get('auths',{}))
+              json.dump(a,open('$HOME/.config/containers/auth.json','w'))" 2>/dev/null || true
+              fi
+              buildah login --get-login image-registry.openshift-image-registry.svc:5000 2>/dev/null || \
+                buildah login -u openshift -p $(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
+                  --tls-verify=false image-registry.openshift-image-registry.svc:5000
+              echo "Building runtime image..."
+              buildah bud --tls-verify=false \
+                -t image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest \
+                $(workspaces.source.path)
+              echo "Pushing runtime image..."
+              buildah push --tls-verify=false \
+                image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest
+              echo "Done."
       workspaces:
         - name: source
           workspace: shared-workspace
-        - name: dockerconfig
+        - name: registry-creds
           workspace: registry-credentials
