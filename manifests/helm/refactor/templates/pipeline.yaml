@@ -128,6 +128,26 @@ spec:
               - dir:.
               - -o
               - cyclonedx-json=sbom.json
+
+    - name: upload-sbom
+      runAfter:
+        - generate-sbom
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: upload
+            image: registry.redhat.io/rhel9/buildah:latest
+            workingDir: $(workspaces.source.path)
+            script: |
+              #!/bin/bash
+              set -e
+              echo "Uploading SBOM to Trustify..."
+              curl -s -X POST "http://{{ .Values.trustifyHost }}:8080/api/v2/sbom" \
+                -H "Content-Type: application/json" \
+                -d @$(workspaces.source.path)/sbom.json \
+                && echo "SBOM uploaded successfully." \
+                || echo "WARN: Trustify upload failed. SBOM saved in workspace."
       workspaces:
         - name: source
           workspace: shared-workspace
