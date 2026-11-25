@@ -113,7 +113,7 @@ spec:
           - name: registry-creds
         steps:
           - name: build-and-push
-            image: quay.io/buildah/stable:latest
+            image: registry.redhat.io/rhel9/buildah:latest
             workingDir: $(workspaces.source.path)
             env:
               - name: BUILDAH_ISOLATION
