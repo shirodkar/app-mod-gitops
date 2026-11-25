@@ -66,6 +66,8 @@ spec:
       params:
         - name: IMAGE
           value: image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8-build-artifacts:latest
+        - name: BUILDER_IMAGE
+          value: {{ .Values.builder.image }}
         - name: TLSVERIFY
           value: "false"
         - name: PATH_CONTEXT
