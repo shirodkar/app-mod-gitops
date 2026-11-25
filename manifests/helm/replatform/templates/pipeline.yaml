@@ -54,29 +54,33 @@ spec:
     - name: build-artifacts
       runAfter:
         - fetch-source
-      taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: s2i-java
-          - name: namespace
-            value: openshift-pipelines
-      params:
-        - name: IMAGE
-          value: image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8-build-artifacts:latest
-        - name: BUILDER_IMAGE
-          value: {{ .Values.builder.image }}
-        - name: TLSVERIFY
-          value: "false"
-        - name: PATH_CONTEXT
-          value: .
+      taskSpec:
+        workspaces:
+          - name: source
+        steps:
+          - name: s2i-build
+            image: {{ .Values.builder.image }}
+            env:
+              - name: CUSTOM_INSTALL_DIRECTORIES
+                value: {{ .Values.env.customInstallDirectories }}
+              - name: POSTGRESQL_DRIVER_VERSION
+                value: {{ .Values.env.postgresqlDriverVersion | quote }}
+              - name: ARTIFACT_DIR
+                value: {{ .Values.env.artifactDir }}
+            script: |
+              #!/bin/bash
+              set -e
+              echo "Preparing S2I source directory..."
+              rm -rf /tmp/src
+              mkdir -p /tmp/src
+              cp -a $(workspaces.source.path)/. /tmp/src/
+              echo "Running S2I assemble..."
+              /usr/local/s2i/assemble
+              echo "S2I assemble complete."
+              cp -r /opt/server $(workspaces.source.path)/server
       workspaces:
         - name: source
           workspace: shared-workspace
-        - name: dockerconfig
-          workspace: registry-credentials
 
     - name: create-dockerfile
       runAfter:
@@ -85,7 +89,7 @@ spec:
         workspaces:
           - name: source
         steps:
-          - name: create-dockerfile
+          - name: write-dockerfile
             image: {{ .Values.builder.image }}
             workingDir: $(workspaces.source.path)
             script: |
