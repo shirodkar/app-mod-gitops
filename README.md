@@ -147,7 +147,31 @@ Wait for the 'replatform' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
-### 9. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
+### 9. Run the Replatform Pipeline
+
+```bash
+oc create -f - <<'EOF'
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: replatform-mammoth-eap8-run-
+  namespace: cicd
+spec:
+  pipelineRef:
+    name: replatform-mammoth-eap8
+  taskRunTemplate:
+    serviceAccountName: tekton-builder
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: replatform-pipeline-pvc
+    - name: registry-credentials
+      secret:
+        secretName: rh-image-pull-secret
+EOF
+```
+
+### 10. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-refactor.yaml

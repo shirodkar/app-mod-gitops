@@ -27,6 +27,7 @@ spec:
       default: {{ .Values.source.gitRef }}
   workspaces:
     - name: shared-workspace
+    - name: registry-credentials
   tasks:
 
     - name: fetch-source
@@ -81,15 +82,16 @@ spec:
         - name: source
           workspace: shared-workspace
 
-    - name: build-runtime
+    - name: build-and-push-runtime
       runAfter:
         - build-artifacts
       taskSpec:
         workspaces:
           - name: source
+          - name: credentials
         steps:
           - name: create-dockerfile
-            image: registry.access.redhat.com/ubi8/ubi-minimal:latest
+            image: {{ .Values.builder.image }}
             workingDir: $(workspaces.source.path)
             script: |
               #!/bin/bash
@@ -99,27 +101,33 @@ spec:
               RUN chmod -R ug+rwX $JBOSS_HOME
               DEOF
               echo "Dockerfile created."
+          - name: build-and-push
+            image: {{ .Values.builder.image }}
+            workingDir: $(workspaces.source.path)
+            securityContext:
+              capabilities:
+                add:
+                  - SETFCAP
+            script: |
+              #!/bin/bash
+              set -e
+              echo "Setting up registry credentials..."
+              mkdir -p /home/jboss/.config/containers
+              if [ -f $(workspaces.credentials.path)/.dockerconfigjson ]; then
+                cp $(workspaces.credentials.path)/.dockerconfigjson /home/jboss/.config/containers/auth.json
+              elif [ -f $(workspaces.credentials.path)/config.json ]; then
+                cp $(workspaces.credentials.path)/config.json /home/jboss/.config/containers/auth.json
+              fi
+              echo "Building runtime image..."
+              buildah bud --tls-verify=false \
+                -t image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest \
+                $(workspaces.source.path)
+              echo "Pushing runtime image..."
+              buildah push --tls-verify=false \
+                image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest
+              echo "Done."
       workspaces:
         - name: source
           workspace: shared-workspace
-
-    - name: push-runtime-image
-      runAfter:
-        - build-runtime
-      taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: buildah
-          - name: namespace
-            value: openshift-pipelines
-      params:
-        - name: IMAGE
-          value: image-registry.openshift-image-registry.svc:5000/{{ .Values.namespace }}/replatform-mammoth-eap8:latest
-        - name: TLSVERIFY
-          value: "false"
-      workspaces:
-        - name: source
-          workspace: shared-workspace
+        - name: credentials
+          workspace: registry-credentials
