@@ -128,6 +128,9 @@ spec:
               - dir:.
               - -o
               - cyclonedx-json=sbom.json
+      workspaces:
+        - name: source
+          workspace: shared-workspace
 
     - name: upload-sbom
       runAfter:
