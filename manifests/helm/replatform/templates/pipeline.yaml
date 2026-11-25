@@ -115,6 +115,11 @@ spec:
           - name: build-and-push
             image: registry.redhat.io/rhel9/buildah:latest
             workingDir: $(workspaces.source.path)
+            env:
+              - name: BUILDAH_ISOLATION
+                value: chroot
+              - name: STORAGE_DRIVER
+                value: vfs
             securityContext:
               capabilities:
                 add:
