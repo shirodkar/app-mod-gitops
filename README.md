@@ -84,58 +84,7 @@ Wait for the 'infra' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
-### 5. Install Trusted Profile Analyzer (TPA)
-
-Update `gitops/infra/application-tpa.yaml` with your cluster's app domain:
-
-```yaml
-appDomain: .apps.<your-cluster-domain>
-oidc:
-  issuerUrl: https://sso.apps.<your-cluster-domain>/realms/trustify
-```
-
-Create the Keycloak realm and client for TPA:
-
-1. Open the Keycloak admin console: `https://sso.apps.<your-cluster-domain>`
-2. Create realm: **trustify**
-3. Create client in the trustify realm:
-   - Client ID: **trustify-ui**
-   - Client type: **OpenID Connect**
-   - Client authentication: **Off** (public client)
-   - Valid redirect URIs: `https://server.apps.<your-cluster-domain>/*`
-   - Web origins: `*`
-
-Deploy TPA:
-
-```bash
-oc apply -f gitops/infra/application-tpa.yaml
-```
-
-Run the database migration (required on first install):
-
-```bash
-oc run tpa-migrate -n trustify --restart=Never \
-  --image=registry.redhat.io/rhtpa/rhtpa-rhel10@sha256:0dbc8d3f314b0877fc7d63612df2db30ae6d1dd741fe85cc9a0c15977d06ea13 \
-  --overrides='{"spec":{"serviceAccountName":"default","containers":[{"name":"tpa-migrate","image":"registry.redhat.io/rhtpa/rhtpa-rhel10@sha256:0dbc8d3f314b0877fc7d63612df2db30ae6d1dd741fe85cc9a0c15977d06ea13","command":["trustd","db","migrate"],"env":[{"name":"TRUSTD_DB_HOST","value":"tpa-db"},{"name":"TRUSTD_DB_PORT","value":"5432"},{"name":"TRUSTD_DB_NAME","value":"trustify"},{"name":"TRUSTD_DB_USER","value":"trustify"},{"name":"TRUSTD_DB_PASSWORD","value":"trustify123"},{"name":"TRUSTD_STORAGE_FS_PATH","value":"/tmp/storage"}],"volumeMounts":[{"name":"tmp","mountPath":"/tmp/storage"}]}],"volumes":[{"name":"tmp","emptyDir":{}}]}}'
-```
-
-Wait for the migration to complete, then clean up:
-
-```bash
-oc logs -f tpa-migrate -n trustify
-oc delete pod tpa-migrate -n trustify
-```
-
-Restart pods if needed:
-
-```bash
-oc delete pods -n trustify -l app.kubernetes.io/component=importer
-oc delete pods -n trustify -l app.kubernetes.io/component=server
-```
-
-TPA UI: `https://server.apps.<your-cluster-domain>`
-
-### 6. Add Applications to MTA
+### 5. Add Applications to MTA
 
 Wait for all 6 MTA pods to show `1/1 Running`:
 
@@ -165,7 +114,7 @@ After the script completes, add generators to both archetypes via the MTA UI:
 2. Edit each archetype (`eap7-to-eap8` and `eap8-to-quarkus`)
 3. Add generators: **Quickstart-Java-Service**, **Quickstart-OpenShift-GitOps**, **Quickstart-OpenShift-Pipelines**
 
-### 7. Set up the Mammoth Application VM and Database VM on OpenShift Virtualization
+### 6. Set up the Mammoth Application VM and Database VM on OpenShift Virtualization
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-rehost.yaml
@@ -177,7 +126,7 @@ Wait for the 'rehost' ArgoCD application to be Synced and Healthy:
 oc get applications -n openshift-gitops -w
 ```
 
-### 8. Create Red Hat registry pull secret
+### 7. Create Red Hat registry pull secret
 
 ```bash
 oc create namespace cicd
@@ -188,7 +137,7 @@ oc create secret docker-registry rh-image-pull-secret \
   --docker-password=<your-rh-password>
 ```
 
-### 9. Set up CICD and WildFly Server for the Mammoth Application on OpenShift
+### 8. Set up CICD and WildFly Server for the Mammoth Application on OpenShift
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-replatform.yaml
@@ -200,7 +149,7 @@ Wait for the 'replatform' ArgoCD application to be Synced. It will show **Progre
 oc get applications -n openshift-gitops -w
 ```
 
-### 10. Run the Replatform Pipeline
+### 9. Run the Replatform Pipeline
 
 ```bash
 oc create -f - <<'EOF'
@@ -224,7 +173,7 @@ spec:
 EOF
 ```
 
-### 11. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
+### 10. Set up CICD and Deployment for the Mammoth Backend Microservice on OpenShift
 
 ```bash
 oc apply -f gitops/applications/mammoth-ear/application-refactor.yaml
@@ -236,7 +185,7 @@ Wait for the 'refactor' ArgoCD application to be Synced. It will show **Progress
 oc get applications -n openshift-gitops -w
 ```
 
-### 12. Run the Refactor Pipeline
+### 11. Run the Refactor Pipeline
 
 ```bash
 oc create -f - <<'EOF'
@@ -262,10 +211,9 @@ EOF
 | Directory                                | Strategy    | Purpose                                                        |
 | ---------------------------------------- | ----------- | -------------------------------------------------------------- |
 | `gitops/install-gitops.yaml`             | Plain       | Bootstrap GitOps operator + RBAC                               |
-| `gitops/infra/`                          | ArgoCD Apps | OpenBao, infrastructure, and TPA application definitions       |
+| `gitops/infra/`                          | ArgoCD Apps | OpenBao + infrastructure application definitions               |
 | `gitops/applications/mammoth-ear/`       | ArgoCD Apps | Rehost, replatform, refactor, and GitLab app definitions       |
 | `manifests/plain/openbao/`               | Plain       | OpenBao supplementary resources (Namespace, SA, Route)         |
-| `manifests/plain/tpa/`                   | Plain       | TPA PostgreSQL database                                        |
 | `manifests/plain/gitlab/`               | Plain       | GitLab operator, subscription, and GitLab CR                   |
 | `manifests/helm/infra/`                  | Helm        | Infra: operators, RBAC, AppProjects, Dev Spaces, MTA           |
 | `manifests/helm/rehost/`                | Helm        | PostgreSQL VM and EAP8 VM on OpenShift Virtualization          |
@@ -305,6 +253,3 @@ The ClusterSecretStore and ExternalSecrets will reconnect automatically once Ope
 
 If buildah can't pull from `registry.redhat.io`, ensure the `rh-image-pull-secret` exists in the `cicd` namespace and is passed as the `registry-credentials` workspace in the PipelineRun.
 
-### TPA importer crashes with "relation does not exist"
-
-The database migration needs to run first. See step 5 for the migration command.
