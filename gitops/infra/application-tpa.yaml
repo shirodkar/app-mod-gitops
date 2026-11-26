@@ -39,6 +39,12 @@ spec:
               frontend:
                 clientId: trustify-ui
 
+          migrateDatabase:
+            host: tpa-db
+            name: trustify
+            username: trustify
+            password: trustify123
+
           modules:
             createDatabase:
               enabled: false
