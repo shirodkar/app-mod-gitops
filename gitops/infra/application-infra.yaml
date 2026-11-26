@@ -35,3 +35,7 @@ spec:
       kind: HyperConverged
       jsonPointers:
         - /spec
+    - group: operator.openshift.io
+      kind: Console
+      jsonPointers:
+        - /spec/plugins
