@@ -19,7 +19,7 @@ spec:
         releaseName: tpa
         skipSchemaValidation: true
         valuesObject:
-          appDomain: .apps.cluster-l5r76.dyn.redhatworkshops.io
+          appDomain: .apps.cluster-qktp4.dyn.redhatworkshops.io
 
           database:
             host: tpa-db
@@ -32,7 +32,7 @@ spec:
             size: 5Gi
 
           oidc:
-            issuerUrl: https://sso.apps.cluster-l5r76.dyn.redhatworkshops.io/realms/trustify
+            issuerUrl: https://sso.apps.cluster-qktp4.dyn.redhatworkshops.io/realms/trustify
             uiScope: ""
             insecure: true
             clients:
